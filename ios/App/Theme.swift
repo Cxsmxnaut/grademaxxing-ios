@@ -83,4 +83,14 @@ extension View {
       self
     #endif
   }
+  /// Pins the search field so it stays reachable. The iOS default hides the field for an
+  /// inline title on iOS 27, which removes the search affordance from the accessibility tree.
+  @ViewBuilder func alwaysVisibleSearch(text: Binding<String>, prompt: String) -> some View {
+    #if os(iOS)
+      self.searchable(
+        text: text, placement: .navigationBarDrawer(displayMode: .always), prompt: prompt)
+    #else
+      self.searchable(text: text, prompt: prompt)
+    #endif
+  }
 }

@@ -2,7 +2,7 @@
 
 Native SwiftUI companion to [Grademaxxing](https://github.com/Cxsmxnaut/grademaxxing). Requires iOS 17 or later and Swift 6. The app uses Grademaxxing's existing read-only HTTPS backend.
 
-**Status: implementation available; iPhone and live-account validation pending.** This is not a TestFlight or App Store release. Local macOS debug/release builds, 73 synthetic native checks, and Mac Catalyst type checking passed. iPhone builds, UI tests, Keychain/file-protection runtime checks, signing, and distribution disclosures remain on the [plan](ios/PLAN.md). See the [validation evidence](ios/VALIDATION.md) for the exact limits of those checks.
+**Status: implementation available; visual, device, and live-account validation pending.** This is not a TestFlight or App Store release. Local macOS debug/release builds, 73 synthetic native checks, and Mac Catalyst type checking passed, and the shared scheme now builds and passes all seven synthetic UI cases on a small and a large iPhone simulator. Appearance, Dynamic Type, VoiceOver, Keychain/file-protection runtime checks, physical-device behaviour, signing, and distribution disclosures remain on the [plan](ios/PLAN.md). See the [validation evidence](ios/VALIDATION.md) for the exact limits of those checks.
 
 ## Open and run
 

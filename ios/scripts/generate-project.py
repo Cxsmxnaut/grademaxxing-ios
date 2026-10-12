@@ -74,6 +74,7 @@ for name in ['Debug', 'Release']:
         'CLANG_ENABLE_MODULES': 'YES', 'CLANG_ENABLE_OBJC_ARC': 'YES',
         'IPHONEOS_DEPLOYMENT_TARGET': '17.0', 'SDKROOT': 'iphoneos', 'SWIFT_VERSION': '6.0',
         'SWIFT_OPTIMIZATION_LEVEL': '-Onone' if name == 'Debug' else '-O',
+        'ONLY_ACTIVE_ARCH': 'YES' if name == 'Debug' else 'NO',
         'DEBUG_INFORMATION_FORMAT': 'dwarf' if name == 'Debug' else 'dwarf-with-dsym',
         'ENABLE_TESTABILITY': 'YES' if name == 'Debug' else 'NO',
         'SWIFT_ACTIVE_COMPILATION_CONDITIONS': 'DEBUG $(inherited)' if name == 'Debug' else '$(inherited)',

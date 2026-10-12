@@ -42,9 +42,8 @@ struct DocumentsView: View {
             .accessibilityIdentifier("document.\(document.id)")
         }
       }.scrollContentBackground(.hidden)
-    }.navigationTitle("Documents").inlineTitle().searchable(
-      text: $query, prompt: "Search documents"
-    )
-    .task(id: model.schoolSessionKey) { await model.loadDocuments() }
+    }.navigationTitle("Documents").inlineTitle()
+      .alwaysVisibleSearch(text: $query, prompt: "Search documents")
+      .task(id: model.schoolSessionKey) { await model.loadDocuments() }
   }
 }

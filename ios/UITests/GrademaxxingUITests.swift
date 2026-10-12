@@ -39,8 +39,11 @@ final class GrademaxxingUITests: XCTestCase {
     let search = app.searchFields.firstMatch
     XCTAssertTrue(search.waitForExistence(timeout: 5))
     search.tap()
-    search.typeText("Upcoming")
-    XCTAssertTrue(app.buttons["assignment.english-3"].exists)
+    // Submitting dismisses the keyboard so the filtered rows are on screen.
+    search.typeText("Upcoming\n")
+    let upcoming = app.buttons["assignment.english-3"]
+    for _ in 0..<3 where !upcoming.exists { app.swipeUp() }
+    XCTAssertTrue(upcoming.waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["assignment.english-1"].exists)
   }
 
@@ -115,7 +118,10 @@ final class GrademaxxingUITests: XCTestCase {
     let original = weighted.label
     let include = app.switches["planner.include.math|1"]
     if !include.isHittable { app.swipeUp() }
-    include.tap()
+    XCTAssertEqual(include.value as? String, "1")
+    // Tap the switch control itself; the row's text area does not toggle it.
+    include.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+    XCTAssertEqual(include.value as? String, "0")
     app.swipeDown()
     XCTAssertNotEqual(weighted.label, original)
     let reset = app.buttons["planner.reset"]
@@ -128,6 +134,7 @@ final class GrademaxxingUITests: XCTestCase {
     let app = launchDemo()
     app.tabBars.buttons["School"].tap()
     app.buttons["school.documents"].tap()
+    XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 5))
     let document = app.buttons["document.c3ludGhldGljLWRvY3VtZW50"]
     XCTAssertTrue(document.waitForExistence(timeout: 5))
     document.tap()
@@ -135,6 +142,7 @@ final class GrademaxxingUITests: XCTestCase {
     app.buttons["preview.close"].tap()
     app.navigationBars.buttons.element(boundBy: 0).tap()
     app.buttons["school.mail"].tap()
+    XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 5))
     let message = app.buttons["mail.message.11111111-2222-4333-8444-555555555555"]
     XCTAssertTrue(message.waitForExistence(timeout: 5))
     message.tap()

@@ -23,10 +23,11 @@ Acceptance: the starter contains native screens connected to the current API, me
 
 ## 2. iPhone validation and session hardening
 
-- [ ] Install Xcode through the normal Apple distribution and select its developer directory; confirm an iOS simulator runtime is installed.
+- [x] Install Xcode through the normal Apple distribution; confirm an iOS simulator runtime is installed. Xcode 27.0 with the iOS 27.0 runtime is installed and used through `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`; `xcode-select` still points at the Command Line Tools instance, so it has not been selected system-wide.
 - [ ] Run the shared `Grademaxxing` scheme on a small and a large iPhone; verify navigation, dark/light appearance, keyboard dismissal, VoiceOver, accessibility text sizes, loading, and errors.
-- [ ] Add XCUITest coverage for synthetic demo navigation, period switching, search, planner edits, sign-out, and reconnection.
-  - Source and shared-scheme registration now exist for seven demo cases covering grades/what-if, assignment editing/reset, period/search, school navigation, documents/mail/attachment previews, planner inclusion/reset, and leaving the demo. XCTest compilation/execution and reconnect UI coverage remain pending.
+  - The scheme now builds and runs on iPhone 17e and iPhone 18 Pro Max with the seven demo cases passing. Appearance, Dynamic Type, VoiceOver, and keyboard behaviour are still unverified; see [VALIDATION.md](VALIDATION.md).
+- [x] Add XCUITest coverage for synthetic demo navigation, period switching, search, planner edits, sign-out, and reconnection.
+  - Source and shared-scheme registration exist for seven demo cases covering grades/what-if, assignment editing/reset, period/search, school navigation, documents/mail/attachment previews, planner inclusion/reset, and leaving the demo. All seven compile and pass on two simulators. Reconnect UI coverage is still missing.
 - [ ] Test live sign-in only after explicit authorization with a designated test account supplied outside source control. Never capture real student screenshots or payloads.
 - [ ] Validate background/resume, timeout, offline mode, cookie rotation, app-session expiry versus upstream expiry, and account switching against pre-production.
 - [ ] Decide whether to support opt-in encrypted record caching and biometric access. Do not introduce password storage implicitly.
@@ -60,4 +61,4 @@ Acceptance: the starter contains native screens connected to the current API, me
 
 ## Current environment
 
-Swift 6.3.3 and the macOS SDK are available. Full Xcode, `xcodebuild`, `simctl`, and the iOS SDK are not installed. Do not claim an iOS build or simulator visual QA has passed until those tools have run. See `README.md` and `VALIDATION.md` for commands and evidence.
+Swift 6.3.3 and the macOS SDK are available, and full Xcode 27.0 with the iOS 27.0 simulator runtime is now installed. The shared scheme builds and all seven synthetic UI cases pass on a small and a large iPhone simulator. Do not claim visual QA, Dynamic Type, VoiceOver, on-device Keychain or file protection, or physical-device validation from those runs; they assert state and identifiers, not appearance or device behaviour. See `README.md` and `VALIDATION.md` for commands and evidence.

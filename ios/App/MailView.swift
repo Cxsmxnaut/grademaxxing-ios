@@ -64,8 +64,10 @@ struct MailView: View {
           }
         }
       }.scrollContentBackground(.hidden)
-    }.navigationTitle("Mail").inlineTitle().searchable(text: $query, prompt: "Search messages")
-      .task(id: model.schoolSessionKey) { await model.loadMailbox() }
+    }
+    .navigationTitle("Mail").inlineTitle()
+    .alwaysVisibleSearch(text: $query, prompt: "Search messages")
+    .task(id: model.schoolSessionKey) { await model.loadMailbox() }
   }
 }
 

@@ -132,7 +132,7 @@ struct CourseView: View {
       }
     }.scrollContentBackground(.hidden).background(Theme.background)
       .navigationTitle(course.title).inlineTitle()
-      .searchable(text: $query, prompt: "Search assignments")
+      .alwaysVisibleSearch(text: $query, prompt: "Search assignments")
       .sheet(isPresented: $showWhatIf) { WhatIfView(course: course) }
       .sheet(isPresented: $showAssignmentPlanner) { AssignmentPlannerView(course: course) }
   }
