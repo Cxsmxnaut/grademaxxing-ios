@@ -25,6 +25,24 @@ final class GrademaxxingUITests: XCTestCase {
     return seen
   }
 
+  /// Scrolls a lazy form until the element sits fully between the navigation bar and the tab bar, so
+  /// a tap cannot land on the tab bar instead of the row. `furtherDown` starts the search in the
+  /// direction the row lies in, since an unrealized row is absent from the tree either way.
+  @MainActor private func bringIntoView(
+    _ element: XCUIElement, in app: XCUIApplication, furtherDown: Bool = true
+  ) {
+    for _ in 0..<12 {
+      guard element.exists else {
+        if furtherDown { app.swipeUp() } else { app.swipeDown() }
+        continue
+      }
+      let top = app.navigationBars.firstMatch.frame.maxY
+      let bottom = app.tabBars.firstMatch.frame.minY
+      if element.frame.minY >= top, element.frame.maxY <= bottom { return }
+      if element.frame.maxY > bottom { app.swipeUp() } else { app.swipeDown() }
+    }
+  }
+
   @MainActor func testWhatIfLeavesOfficialGradeUnchanged() {
     let app = launchDemo()
     app.buttons["course.math"].tap()
@@ -131,28 +149,29 @@ final class GrademaxxingUITests: XCTestCase {
     XCTAssertTrue(weighted.waitForExistence(timeout: 10))
     // Demo data weights AP Calculus 5.0, English Honors 3.5, Chemistry 4.0, World History 3.0,
     // and Studio Art 4.0 across five credits each.
+    bringIntoView(weighted, in: app, furtherDown: false)
     let initial = label(of: weighted, containing: "3.90")
     XCTAssertTrue(initial.contains("3.90"), "Expected weighted GPA 3.90, saw \(initial)")
     let include = app.switches["planner.include.math|1"].firstMatch
-    for _ in 0..<8 where !include.exists { app.swipeUp() }
-    XCTAssertTrue(include.exists)
+    bringIntoView(include, in: app)
+    XCTAssertTrue(include.exists, "Expected the math inclusion switch")
     XCTAssertEqual(include.value as? String, "1")
-    // The switch element covers the whole row and the row's text area does not move the control,
-    // so tap the trailing edge. The estimate is asserted rather than the switch re-read: after the
-    // control moves, runtimes differ on whether the row stays queryable.
+    // The switch element covers the whole row and the row's text area does not move the control, so
+    // tap the trailing edge of a fully visible row. Assert the estimate rather than the switch
+    // again: after the control moves, runtimes differ on whether the row stays queryable.
     include.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
     XCTAssertTrue(
-      app.state == .runningForeground, "app state after toggling inclusion: \(app.state)")
-    print("DIAGNOSTIC after toggle:\n\(app.debugDescription)")
-    for _ in 0..<8 where !weighted.exists { app.swipeDown() }
+      app.tabBars.buttons["Planner"].isSelected,
+      "The inclusion tap left the Planner tab; app state \(app.state)")
+    bringIntoView(weighted, in: app, furtherDown: false)
     // Excluding math leaves 14.5 quality points over four credits: 3.625, shown as 3.63.
     let excluded = label(of: weighted, containing: "3.63")
     XCTAssertTrue(excluded.contains("3.63"), "Expected weighted GPA 3.63, saw \(excluded)")
     let reset = app.buttons["planner.reset"]
-    for _ in 0..<8 where !reset.exists { app.swipeUp() }
-    XCTAssertTrue(reset.exists)
+    bringIntoView(reset, in: app)
+    XCTAssertTrue(reset.exists, "Expected the planner reset button")
     reset.tap()
-    for _ in 0..<8 where !weighted.exists { app.swipeDown() }
+    bringIntoView(weighted, in: app, furtherDown: false)
     let restored = label(of: weighted, containing: "3.90")
     XCTAssertTrue(
       restored.contains("3.90"), "Expected weighted GPA 3.90 after reset, saw \(restored)")
