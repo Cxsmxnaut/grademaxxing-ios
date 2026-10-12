@@ -11,6 +11,20 @@ final class GrademaxxingUITests: XCTestCase {
     return app
   }
 
+  /// Polls an element until its label contains `value`, without reading properties of an element
+  /// that is not there. A vanished element reports `"<missing>"` rather than raising a snapshot error.
+  @MainActor private func label(
+    of element: XCUIElement, containing value: String, timeout: TimeInterval = 10
+  ) -> String {
+    let deadline = Date().addingTimeInterval(timeout)
+    var seen = element.exists ? element.label : "<missing>"
+    while !seen.contains(value), Date() < deadline {
+      _ = XCTWaiter.wait(for: [XCTestExpectation(description: "poll")], timeout: 0.25)
+      seen = element.exists ? element.label : "<missing>"
+    }
+    return seen
+  }
+
   @MainActor func testWhatIfLeavesOfficialGradeUnchanged() {
     let app = launchDemo()
     app.buttons["course.math"].tap()
@@ -114,21 +128,31 @@ final class GrademaxxingUITests: XCTestCase {
     let app = launchDemo()
     app.tabBars.buttons["Planner"].tap()
     let weighted = app.staticTexts["planner.weighted"]
-    XCTAssertTrue(weighted.waitForExistence(timeout: 5))
-    let original = weighted.label
-    let include = app.switches["planner.include.math|1"]
-    if !include.isHittable { app.swipeUp() }
+    XCTAssertTrue(weighted.waitForExistence(timeout: 10))
+    // Demo data weights AP Calculus 5.0, English Honors 3.5, Chemistry 4.0, World History 3.0,
+    // and Studio Art 4.0 across five credits each.
+    let initial = label(of: weighted, containing: "3.90")
+    XCTAssertTrue(initial.contains("3.90"), "Expected weighted GPA 3.90, saw \(initial)")
+    let include = app.switches["planner.include.math|1"].firstMatch
+    for _ in 0..<8 where !include.exists { app.swipeUp() }
+    XCTAssertTrue(include.exists)
     XCTAssertEqual(include.value as? String, "1")
-    // Tap the switch control itself; the row's text area does not toggle it.
+    // The switch element covers the whole row and the row's text area does not move the control,
+    // so tap the trailing edge. The estimate is asserted rather than the switch re-read: after the
+    // control moves, runtimes differ on whether the row stays queryable.
     include.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
-    XCTAssertEqual(include.value as? String, "0")
-    app.swipeDown()
-    XCTAssertNotEqual(weighted.label, original)
+    for _ in 0..<8 where !weighted.exists { app.swipeDown() }
+    // Excluding math leaves 14.5 quality points over four credits: 3.625, shown as 3.63.
+    let excluded = label(of: weighted, containing: "3.63")
+    XCTAssertTrue(excluded.contains("3.63"), "Expected weighted GPA 3.63, saw \(excluded)")
     let reset = app.buttons["planner.reset"]
-    for _ in 0..<4 where !reset.isHittable { app.swipeUp() }
+    for _ in 0..<8 where !reset.exists { app.swipeUp() }
+    XCTAssertTrue(reset.exists)
     reset.tap()
-    for _ in 0..<4 where !weighted.isHittable { app.swipeDown() }
-    XCTAssertEqual(weighted.label, original)
+    for _ in 0..<8 where !weighted.exists { app.swipeDown() }
+    let restored = label(of: weighted, containing: "3.90")
+    XCTAssertTrue(
+      restored.contains("3.90"), "Expected weighted GPA 3.90 after reset, saw \(restored)")
   }
   @MainActor func testDocumentsAndReadOnlyMailAttachmentPreview() {
     let app = launchDemo()
