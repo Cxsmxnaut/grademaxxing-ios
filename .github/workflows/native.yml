@@ -43,3 +43,11 @@ jobs:
             -configuration Debug -destination "platform=iOS Simulator,id=$IOS_SIMULATOR_UDID" \
             -derivedDataPath "$RUNNER_TEMP/NativeDerivedData" \
             CODE_SIGNING_ALLOWED=NO
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-test-results
+          path: ${{ runner.temp }}/NativeDerivedData/Logs/Test/*.xcresult
+          if-no-files-found: ignore
+          retention-days: 7

@@ -141,6 +141,9 @@ final class GrademaxxingUITests: XCTestCase {
     // so tap the trailing edge. The estimate is asserted rather than the switch re-read: after the
     // control moves, runtimes differ on whether the row stays queryable.
     include.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+    XCTAssertTrue(
+      app.state == .runningForeground, "app state after toggling inclusion: \(app.state)")
+    print("DIAGNOSTIC after toggle:\n\(app.debugDescription)")
     for _ in 0..<8 where !weighted.exists { app.swipeDown() }
     // Excluding math leaves 14.5 quality points over four credits: 3.625, shown as 3.63.
     let excluded = label(of: weighted, containing: "3.63")
