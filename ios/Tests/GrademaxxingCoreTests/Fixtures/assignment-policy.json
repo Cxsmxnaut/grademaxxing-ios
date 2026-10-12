@@ -1,0 +1,795 @@
+[
+	{
+		"name": "Official totals with negative hidden denominator",
+		"official": 85,
+		"categories": [
+			{
+				"name": "Tests",
+				"weight": 70,
+				"earned": 80,
+				"possible": 100
+			},
+			{
+				"name": "Practice",
+				"weight": 30,
+				"earned": 95,
+				"possible": 100
+			}
+		],
+		"wire": [
+			{
+				"GradebookID": "a",
+				"Measure": "Synthetic a",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "72",
+				"PointPossible": "120"
+			},
+			{
+				"GradebookID": "b",
+				"Measure": "Synthetic b",
+				"Type": "Practice",
+				"Date": "2026-09-03",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "95",
+				"PointPossible": "100"
+			}
+		],
+		"edit": {
+			"id": "a",
+			"earned": 100
+		},
+		"parsed": [
+			{
+				"id": "a",
+				"earned": 72,
+				"possible": 120,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			},
+			{
+				"id": "b",
+				"earned": 95,
+				"possible": 100,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			}
+		],
+		"baseline": 84.5,
+		"projected": 104.60000000000002,
+		"omitted": 0,
+		"partial": true,
+		"targetCategory": "Tests",
+		"needed": -3.428571428571402,
+		"trend": [
+			{
+				"date": "2026-09-01",
+				"percentage": 74.5,
+				"assignments": [
+					"Synthetic a"
+				]
+			},
+			{
+				"date": "2026-09-03",
+				"percentage": 85,
+				"assignments": [
+					"Synthetic b"
+				]
+			}
+		],
+		"domain": [
+			72.5,
+			87
+		]
+	},
+	{
+		"name": "Precise published points before editing",
+		"official": 90.45,
+		"categories": [
+			{
+				"name": "Tests",
+				"weight": 100,
+				"earned": 9.045,
+				"possible": 10
+			}
+		],
+		"wire": [
+			{
+				"GradebookID": "a",
+				"Measure": "Synthetic a",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "9.0",
+				"PointPossible": "10",
+				"AssignmentPercentage": "90.45",
+				"AssignmentPercentagePrecision": "2",
+				"ScoreCalValue": "18.09",
+				"ScoreMaxValue": "20"
+			}
+		],
+		"edit": {
+			"id": "a",
+			"earned": 9.5
+		},
+		"parsed": [
+			{
+				"id": "a",
+				"earned": 9,
+				"possible": 10,
+				"precise": 9.045000000000002,
+				"extraCredit": false,
+				"excluded": false
+			}
+		],
+		"baseline": 90.45000000000002,
+		"projected": 94.99999999999997,
+		"omitted": 0,
+		"partial": false,
+		"targetCategory": "Tests",
+		"needed": 17.500000000000004,
+		"trend": [
+			{
+				"date": "2026-09-01",
+				"percentage": 90.45,
+				"assignments": [
+					"Synthetic a"
+				]
+			}
+		],
+		"domain": [
+			85.45,
+			95.45
+		]
+	},
+	{
+		"name": "Rounded percentage must not replace precise points",
+		"official": 90.4,
+		"wire": [
+			{
+				"GradebookID": "a",
+				"Measure": "Synthetic a",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "9.04",
+				"PointPossible": "10.00",
+				"AssignmentPercentage": "90",
+				"AssignmentPercentagePrecision": "0"
+			}
+		],
+		"edit": {
+			"id": "a",
+			"earned": 9.6
+		},
+		"categories": [],
+		"parsed": [
+			{
+				"id": "a",
+				"earned": 9.04,
+				"possible": 10,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			}
+		],
+		"baseline": 90.39999999999999,
+		"projected": 96.00000000000001,
+		"omitted": 0,
+		"partial": false,
+		"targetCategory": "Tests",
+		"needed": 17.4,
+		"trend": [
+			{
+				"date": "2026-09-01",
+				"percentage": 90.4,
+				"assignments": [
+					"Synthetic a"
+				]
+			}
+		],
+		"domain": [
+			85.4,
+			95.4
+		]
+	},
+	{
+		"name": "Extra credit category activates with new work",
+		"official": 80,
+		"categories": [
+			{
+				"name": "Tests",
+				"weight": 70,
+				"earned": 80,
+				"possible": 100
+			},
+			{
+				"name": "Practice",
+				"weight": 30,
+				"earned": 5,
+				"possible": 0
+			}
+		],
+		"wire": [
+			{
+				"GradebookID": "a",
+				"Measure": "Synthetic a",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "80",
+				"PointPossible": "100"
+			},
+			{
+				"GradebookID": "bonus",
+				"Measure": "Synthetic bonus",
+				"Type": "Practice",
+				"Date": "2026-09-03",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "5",
+				"PointPossible": ""
+			}
+		],
+		"edit": {
+			"id": "a",
+			"earned": 80
+		},
+		"add": {
+			"category": "Practice",
+			"earned": 8,
+			"possible": 10
+		},
+		"parsed": [
+			{
+				"id": "a",
+				"earned": 80,
+				"possible": 100,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			},
+			{
+				"id": "bonus",
+				"earned": 5,
+				"possible": 0,
+				"precise": null,
+				"extraCredit": true,
+				"excluded": false
+			}
+		],
+		"baseline": 80,
+		"projected": 95,
+		"omitted": 0,
+		"partial": false,
+		"targetCategory": "Practice",
+		"needed": 21.000000000000014,
+		"trend": [
+			{
+				"date": "2026-09-01",
+				"percentage": 80,
+				"assignments": [
+					"Synthetic a"
+				]
+			},
+			{
+				"date": "2026-09-03",
+				"percentage": 80,
+				"assignments": [
+					"Synthetic bonus"
+				]
+			}
+		],
+		"domain": [
+			75,
+			85
+		]
+	},
+	{
+		"name": "Unsupported and zero-weight assignments",
+		"official": 82,
+		"categories": [
+			{
+				"name": "Tests",
+				"weight": 100,
+				"earned": 80,
+				"possible": 100
+			},
+			{
+				"name": "Notes",
+				"weight": 0,
+				"earned": 0,
+				"possible": 0
+			}
+		],
+		"wire": [
+			{
+				"GradebookID": "a",
+				"Measure": "Synthetic a",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "80",
+				"PointPossible": "100"
+			},
+			{
+				"GradebookID": "raw",
+				"Measure": "Synthetic raw",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"CalculationUnavailable": "true",
+				"ScoreCalValue": "3",
+				"ScoreMaxValue": "4"
+			},
+			{
+				"GradebookID": "unknown",
+				"Measure": "Synthetic unknown",
+				"Type": "Other",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "1",
+				"PointPossible": "2"
+			},
+			{
+				"GradebookID": "zero",
+				"Measure": "Synthetic zero",
+				"Type": "Notes",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"CalculationUnavailable": "true",
+				"ScoreCalValue": "1",
+				"ScoreMaxValue": "4"
+			},
+			{
+				"GradebookID": "drop",
+				"Measure": "Synthetic drop",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": " ( Not For Grading ) teacher note",
+				"Point": "0",
+				"PointPossible": "10"
+			}
+		],
+		"edit": {
+			"id": "a",
+			"earned": 90
+		},
+		"parsed": [
+			{
+				"id": "a",
+				"earned": 80,
+				"possible": 100,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			},
+			{
+				"id": "raw",
+				"earned": null,
+				"possible": null,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			},
+			{
+				"id": "unknown",
+				"earned": 1,
+				"possible": 2,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			},
+			{
+				"id": "zero",
+				"earned": null,
+				"possible": null,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			},
+			{
+				"id": "drop",
+				"earned": 0,
+				"possible": 10,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": true
+			}
+		],
+		"baseline": 80,
+		"projected": 92,
+		"omitted": 2,
+		"partial": true,
+		"targetCategory": "Tests",
+		"needed": 15.599999999999994,
+		"trend": [
+			{
+				"date": "2026-09-01",
+				"percentage": 82,
+				"assignments": [
+					"Synthetic a"
+				]
+			}
+		],
+		"domain": [
+			77,
+			87
+		]
+	},
+	{
+		"name": "Unweighted points and same-day trend",
+		"official": 85,
+		"wire": [
+			{
+				"GradebookID": "a",
+				"Measure": "Synthetic a",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "16",
+				"PointPossible": "20"
+			},
+			{
+				"GradebookID": "b",
+				"Measure": "Synthetic b",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "9",
+				"PointPossible": "10"
+			},
+			{
+				"GradebookID": "c",
+				"Measure": "Synthetic c",
+				"Type": "Tests",
+				"Date": "2026-09-03",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "8",
+				"PointPossible": "10"
+			}
+		],
+		"edit": {
+			"id": "a",
+			"excluded": true
+		},
+		"categories": [],
+		"parsed": [
+			{
+				"id": "a",
+				"earned": 16,
+				"possible": 20,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			},
+			{
+				"id": "b",
+				"earned": 9,
+				"possible": 10,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			},
+			{
+				"id": "c",
+				"earned": 8,
+				"possible": 10,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			}
+		],
+		"baseline": 82.5,
+		"projected": 87.5,
+		"omitted": 0,
+		"partial": true,
+		"targetCategory": "Tests",
+		"needed": 18,
+		"trend": [
+			{
+				"date": "2026-09-01",
+				"percentage": 85.83333333333334,
+				"assignments": [
+					"Synthetic a",
+					"Synthetic b"
+				]
+			},
+			{
+				"date": "2026-09-03",
+				"percentage": 85,
+				"assignments": [
+					"Synthetic c"
+				]
+			}
+		],
+		"domain": [
+			83,
+			87.83333333333334
+		]
+	},
+	{
+		"name": "Explicit blank earned is zero",
+		"official": 50,
+		"wire": [
+			{
+				"GradebookID": "a",
+				"Measure": "Synthetic a",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "",
+				"PointPossible": "10"
+			},
+			{
+				"GradebookID": "b",
+				"Measure": "Synthetic b",
+				"Type": "Tests",
+				"Date": "2026-09-03",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "10",
+				"PointPossible": "10"
+			}
+		],
+		"edit": {
+			"id": "a",
+			"earned": 5
+		},
+		"categories": [],
+		"parsed": [
+			{
+				"id": "a",
+				"earned": 0,
+				"possible": 10,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			},
+			{
+				"id": "b",
+				"earned": 10,
+				"possible": 10,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			}
+		],
+		"baseline": 50,
+		"projected": 75,
+		"omitted": 0,
+		"partial": false,
+		"targetCategory": "Tests",
+		"needed": 21,
+		"trend": [
+			{
+				"date": "2026-09-01",
+				"percentage": 0,
+				"assignments": [
+					"Synthetic a"
+				]
+			},
+			{
+				"date": "2026-09-03",
+				"percentage": 50,
+				"assignments": [
+					"Synthetic b"
+				]
+			}
+		],
+		"domain": [
+			-5,
+			55
+		]
+	},
+	{
+		"name": "Missing earned but published percentage",
+		"official": 80,
+		"wire": [
+			{
+				"GradebookID": "a",
+				"Measure": "Synthetic a",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"PointPossible": "10",
+				"AssignmentPercentage": "80"
+			}
+		],
+		"edit": {
+			"id": "a",
+			"earned": 9
+		},
+		"categories": [],
+		"parsed": [
+			{
+				"id": "a",
+				"earned": null,
+				"possible": 10,
+				"precise": 8,
+				"extraCredit": false,
+				"excluded": false
+			}
+		],
+		"baseline": 80,
+		"projected": 90,
+		"omitted": 0,
+		"partial": false,
+		"targetCategory": "Tests",
+		"needed": 18,
+		"trend": [
+			{
+				"date": "2026-09-01",
+				"percentage": 80,
+				"assignments": [
+					"Synthetic a"
+				]
+			}
+		],
+		"domain": [
+			75,
+			85
+		]
+	},
+	{
+		"name": "Fraction fallback with bonus",
+		"official": 85,
+		"wire": [
+			{
+				"GradebookID": "a",
+				"Measure": "Synthetic a",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Points": "8 / 10"
+			},
+			{
+				"GradebookID": "b",
+				"Measure": "Synthetic b",
+				"Type": "Tests",
+				"Date": "2026-09-03",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Points": "0.5 /"
+			}
+		],
+		"edit": {
+			"id": "a",
+			"earned": 9
+		},
+		"categories": [],
+		"parsed": [
+			{
+				"id": "a",
+				"earned": 8,
+				"possible": 10,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			},
+			{
+				"id": "b",
+				"earned": 0.5,
+				"possible": 0,
+				"precise": null,
+				"extraCredit": true,
+				"excluded": false
+			}
+		],
+		"baseline": 85,
+		"projected": 95,
+		"omitted": 0,
+		"partial": false,
+		"targetCategory": "Tests",
+		"needed": 17.5,
+		"trend": [
+			{
+				"date": "2026-09-01",
+				"percentage": 80,
+				"assignments": [
+					"Synthetic a"
+				]
+			},
+			{
+				"date": "2026-09-03",
+				"percentage": 85,
+				"assignments": [
+					"Synthetic b"
+				]
+			}
+		],
+		"domain": [
+			78,
+			87
+		]
+	},
+	{
+		"name": "Clearing a supported score invalidates estimate",
+		"official": 80,
+		"wire": [
+			{
+				"GradebookID": "a",
+				"Measure": "Synthetic a",
+				"Type": "Tests",
+				"Date": "2026-09-01",
+				"DueDate": "2026-09-02",
+				"MeasureDescription": "",
+				"Notes": "",
+				"Point": "8",
+				"PointPossible": "10"
+			}
+		],
+		"edit": {
+			"id": "a",
+			"earned": null
+		},
+		"categories": [],
+		"parsed": [
+			{
+				"id": "a",
+				"earned": 8,
+				"possible": 10,
+				"precise": null,
+				"extraCredit": false,
+				"excluded": false
+			}
+		],
+		"baseline": 80,
+		"projected": null,
+		"omitted": 0,
+		"partial": false,
+		"targetCategory": "Tests",
+		"needed": null,
+		"trend": [
+			{
+				"date": "2026-09-01",
+				"percentage": 80,
+				"assignments": [
+					"Synthetic a"
+				]
+			}
+		],
+		"domain": [
+			75,
+			85
+		]
+	}
+]

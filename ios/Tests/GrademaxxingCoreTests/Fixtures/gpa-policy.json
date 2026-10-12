@@ -1,0 +1,259 @@
+{
+	"policyLabel": "PUSD provisional",
+	"gradePoints": [
+		{
+			"letter": "A+",
+			"points": 4
+		},
+		{
+			"letter": "A-",
+			"points": 4
+		},
+		{
+			"letter": "B+",
+			"points": 3
+		},
+		{
+			"letter": "C-",
+			"points": 2
+		},
+		{
+			"letter": "D+",
+			"points": 1
+		},
+		{
+			"letter": "F",
+			"points": 0
+		},
+		{
+			"letter": "NC",
+			"points": 0
+		},
+		{
+			"letter": "NP",
+			"points": 0
+		},
+		{
+			"letter": "P",
+			"points": null
+		},
+		{
+			"letter": "CR",
+			"points": null
+		},
+		{
+			"letter": "unknown",
+			"points": null
+		},
+		{
+			"letter": " a ",
+			"points": 4
+		}
+	],
+	"coursePolicies": [
+		{
+			"title": "AP Synthetic",
+			"bonus": 1,
+			"academic": true
+		},
+		{
+			"title": "IB Synthetic",
+			"bonus": 1,
+			"academic": true
+		},
+		{
+			"title": "CAPSTONE",
+			"bonus": 0,
+			"academic": true
+		},
+		{
+			"title": "Synthetic Honours",
+			"bonus": 0.5,
+			"academic": true
+		},
+		{
+			"title": "PE",
+			"bonus": 0,
+			"academic": false
+		},
+		{
+			"title": "P.E.",
+			"bonus": 0,
+			"academic": false
+		},
+		{
+			"title": "Physical Education Honors",
+			"bonus": 0.5,
+			"academic": false
+		},
+		{
+			"title": "Driver's Education",
+			"bonus": 0,
+			"academic": false
+		},
+		{
+			"title": "ROTC",
+			"bonus": 0,
+			"academic": false
+		},
+		{
+			"title": "Synthetic Art",
+			"bonus": 0,
+			"academic": true
+		}
+	],
+	"cases": [
+		{
+			"name": "Plus/minus and rigor",
+			"enrollments": [
+				{
+					"courseName": "AP Synthetic Math",
+					"letter": "A-",
+					"credits": 5,
+					"gradeLevel": 11,
+					"excludeFromGpa": false,
+					"academic": true
+				},
+				{
+					"courseName": "Synthetic English Honours",
+					"letter": "B+",
+					"credits": 2.5,
+					"gradeLevel": 11,
+					"excludeFromGpa": false,
+					"academic": true
+				},
+				{
+					"courseName": "AP Synthetic Science",
+					"letter": "D",
+					"credits": 5,
+					"gradeLevel": 11,
+					"excludeFromGpa": false,
+					"academic": true
+				}
+			],
+			"expected": {
+				"unweighted": 2.6,
+				"weighted": 3.1,
+				"academicWeighted": 3.1,
+				"attemptedCredits": 12.5,
+				"academicCredits": 12.5
+			}
+		},
+		{
+			"name": "Academic subset",
+			"enrollments": [
+				{
+					"courseName": "IB Synthetic History",
+					"letter": "A",
+					"credits": 5,
+					"gradeLevel": 10,
+					"excludeFromGpa": false,
+					"academic": true
+				},
+				{
+					"courseName": "Physical Education",
+					"letter": "B",
+					"credits": 5,
+					"gradeLevel": 10,
+					"excludeFromGpa": false,
+					"academic": false
+				},
+				{
+					"courseName": "Driver's Education",
+					"letter": "A",
+					"credits": 2.5,
+					"gradeLevel": 10,
+					"excludeFromGpa": false,
+					"academic": false
+				}
+			],
+			"expected": {
+				"unweighted": 3.6,
+				"weighted": 4,
+				"academicWeighted": 5,
+				"attemptedCredits": 12.5,
+				"academicCredits": 5
+			}
+		},
+		{
+			"name": "Eligibility, exclusions, and pass/fail",
+			"enrollments": [
+				{
+					"courseName": "Synthetic Middle School",
+					"letter": "A",
+					"credits": 5,
+					"gradeLevel": 8,
+					"excludeFromGpa": false,
+					"academic": true
+				},
+				{
+					"courseName": "AP Excluded",
+					"letter": "A",
+					"credits": 5,
+					"gradeLevel": 12,
+					"excludeFromGpa": true,
+					"academic": true
+				},
+				{
+					"courseName": "Synthetic Pass",
+					"letter": "P",
+					"credits": 5,
+					"gradeLevel": 12,
+					"excludeFromGpa": false,
+					"academic": true
+				},
+				{
+					"courseName": "AP Synthetic Failure",
+					"letter": "NP",
+					"credits": 5,
+					"gradeLevel": 12,
+					"excludeFromGpa": false,
+					"academic": true
+				},
+				{
+					"courseName": "Synthetic Missing Credit",
+					"letter": "A",
+					"credits": 0,
+					"gradeLevel": 12,
+					"excludeFromGpa": false,
+					"academic": true
+				}
+			],
+			"expected": {
+				"unweighted": 0,
+				"weighted": 0,
+				"academicWeighted": 0,
+				"attemptedCredits": 5,
+				"academicCredits": 5
+			}
+		},
+		{
+			"name": "Thousandths and normalization",
+			"enrollments": [
+				{
+					"courseName": "Synthetic Algebra",
+					"letter": " a- ",
+					"credits": 2.333,
+					"gradeLevel": 9,
+					"excludeFromGpa": false,
+					"academic": true
+				},
+				{
+					"courseName": "Synthetic Honors",
+					"letter": " c+ ",
+					"credits": 4.667,
+					"gradeLevel": 9,
+					"excludeFromGpa": false,
+					"academic": true
+				}
+			],
+			"expected": {
+				"unweighted": 2.667,
+				"weighted": 3,
+				"academicWeighted": 3,
+				"attemptedCredits": 7,
+				"academicCredits": 7
+			}
+		}
+	]
+}

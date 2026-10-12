@@ -1,0 +1,17 @@
+{
+	"messagePersonId": "11111111-2222-4333-8444-555555555555",
+	"subject": "Synthetic project guide",
+	"from": {
+		"contactDetails1": "Ms. Example"
+	},
+	"sendDateTimeFormattedLong": "October 9, 2026",
+	"mailRead": false,
+	"isSystemMessage": false,
+	"messageText": "<p>Review the synthetic project guide &amp; checklist.</p><p><a href=\"https://example.edu/project\">Project page</a></p>",
+	"attachments": [
+		{
+			"attachmentId": "22222222-3333-4444-8555-666666666666",
+			"name": "Synthetic guide.pdf"
+		}
+	]
+}

@@ -1,0 +1,21 @@
+{
+	"StudentDocumentDatas": {
+		"StudentDocumentData": [
+			{
+				"_DocumentGU": "c3ludGhldGljLWRvY3VtZW50",
+				"_DocumentFileName": "Synthetic progress report.pdf",
+				"_DocumentDate": "10/09/2026",
+				"_DocumentType": "Report",
+				"_StudentGU": "",
+				"_DocumentComment": "Synthetic progress report.pdf"
+			}
+		]
+	},
+	"_xmlns_xsd": "",
+	"_xmlns_xsi": "",
+	"_showDateColumn": "",
+	"_showDocNameColumn": "",
+	"_showDocCatColumn": "",
+	"_StudentGU": "",
+	"_StudentSSY": ""
+}

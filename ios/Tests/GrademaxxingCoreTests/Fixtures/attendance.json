@@ -1,0 +1,108 @@
+{
+	"Absences": {
+		"Absence": [
+			{
+				"_AbsenceDate": "2026-10-06",
+				"_Reason": "Tardy",
+				"_Note": "Tardy",
+				"_DailyIconName": "",
+				"_CodeAllDayReasonType": "",
+				"_CodeAllDayDescription": "",
+				"Periods": {
+					"Period": [
+						{
+							"_Number": "",
+							"_Name": "Tardy",
+							"_Reason": "Late arrival",
+							"_Course": "Synthetic Math",
+							"_Staff": "",
+							"_StaffEMail": "",
+							"_IconName": "",
+							"_SchoolName": "Synthetic High School",
+							"_StaffGU": "",
+							"_OrgYearGU": ""
+						}
+					]
+				}
+			},
+			{
+				"_AbsenceDate": "2026-10-08",
+				"_Reason": "Medical",
+				"_Note": "Medical",
+				"_DailyIconName": "",
+				"_CodeAllDayReasonType": "",
+				"_CodeAllDayDescription": "",
+				"Periods": {
+					"Period": [
+						{
+							"_Number": "",
+							"_Name": "Excused",
+							"_Reason": "Medical",
+							"_Course": "Synthetic English",
+							"_Staff": "",
+							"_StaffEMail": "",
+							"_IconName": "",
+							"_SchoolName": "Synthetic High School",
+							"_StaffGU": "",
+							"_OrgYearGU": ""
+						}
+					]
+				}
+			}
+		]
+	},
+	"CourseTotals": [
+		{
+			"Course": "Synthetic Math",
+			"Present": 28,
+			"Tardy": 1,
+			"Absent": 0,
+			"Excused": 0,
+			"Unexcused": 0
+		},
+		{
+			"Course": "Synthetic English",
+			"Present": 28,
+			"Tardy": 0,
+			"Absent": 1,
+			"Excused": 1,
+			"Unexcused": 0
+		}
+	],
+	"DailyRecords": [
+		{
+			"Date": "2026-10-05",
+			"Status": "present",
+			"Reason": "Present"
+		},
+		{
+			"Date": "2026-10-06",
+			"Status": "tardy",
+			"Reason": "Tardy"
+		},
+		{
+			"Date": "2026-10-08",
+			"Status": "excused",
+			"Reason": "Medical"
+		}
+	],
+	"TotalExcused": {
+		"PeriodTotal": []
+	},
+	"TotalTardies": {
+		"PeriodTotal": []
+	},
+	"TotalUnexcused": {
+		"PeriodTotal": []
+	},
+	"TotalActivities": {},
+	"TotalUnexcusedTardies": {},
+	"ConcurrentSchoolsLists": "",
+	"xmlns:xsd": "",
+	"xmlns:xsi": "",
+	"_Type": "",
+	"_StartPeriod": "",
+	"_EndPeriod": "",
+	"_PeriodCount": "0",
+	"_SchoolName": "Synthetic High School"
+}
