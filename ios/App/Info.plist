@@ -8,10 +8,11 @@
     <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
     <key>CFBundleName</key><string>$(PRODUCT_NAME)</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.1.0</string>
-    <key>CFBundleVersion</key><string>1</string>
+    <key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
+    <key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
     <key>LSRequiresIPhoneOS</key><true/>
-    <key>GrademaxxingAPIOrigin</key><string>https://dev.grademaxxing.app</string>
+    <key>GrademaxxingAPIOrigin</key><string>$(GRADEMAXXING_API_ORIGIN)</string>
+    <key>ITSAppUsesNonExemptEncryption</key><false/>
     <key>UILaunchScreen</key><dict/>
     <key>UISupportedInterfaceOrientations</key><array>
         <string>UIInterfaceOrientationPortrait</string>

@@ -45,7 +45,7 @@ struct SchoolCalendarView: View {
             }
             let events = book.events.filter { selected == nil || $0.date == selected }
             if events.isEmpty {
-              Text("No events are listed for this selection.").foregroundStyle(.secondary)
+              Text("No events are listed for this selection.").foregroundStyle(Theme.muted)
             }
             ForEach(events) { event in
               NavigationLink {
@@ -60,7 +60,7 @@ struct SchoolCalendarView: View {
                       event.time, event.type,
                     ].filter { !$0.isEmpty }.joined(separator: " · ")
                   )
-                  .font(.caption).foregroundStyle(.secondary)
+                  .font(.caption).foregroundStyle(Theme.muted)
                 }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
                   .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
               }.buttonStyle(.plain)
@@ -69,7 +69,7 @@ struct SchoolCalendarView: View {
               Text(
                 "StudentVUE calendar range: \(start.localDate.formatted(date: .abbreviated, time: .omitted)) – \(end.localDate.formatted(date: .abbreviated, time: .omitted))"
               )
-              .font(.caption).foregroundStyle(.secondary)
+              .font(.caption).foregroundStyle(Theme.muted)
             }
           }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
         }
@@ -134,9 +134,15 @@ private struct CalendarEventView: View {
           "Date", value: event.date.localDate.formatted(date: .complete, time: .omitted))
         if !event.time.isEmpty { LabeledContent("Time", value: event.time) }
         if !event.type.isEmpty { LabeledContent("Type", value: event.type) }
+      }.listRowBackground(Theme.surface)
+      if !event.description.isEmpty {
+        Section("Description") { Text(event.description) }.listRowBackground(Theme.surface)
       }
-      if !event.description.isEmpty { Section("Description") { Text(event.description) } }
-      if !event.details.isEmpty { Section("Details") { Text(event.details) } }
-    }.navigationTitle("Calendar event").inlineTitle()
+      if !event.details.isEmpty {
+        Section("Details") { Text(event.details) }.listRowBackground(Theme.surface)
+      }
+    }.scrollContentBackground(.hidden).background(Theme.background).navigationTitle(
+      "Calendar event"
+    ).inlineTitle()
   }
 }

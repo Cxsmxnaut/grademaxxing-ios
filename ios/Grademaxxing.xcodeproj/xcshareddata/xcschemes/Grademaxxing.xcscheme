@@ -19,5 +19,5 @@
     <BuildableProductRunnable runnableDebuggingMode="0"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="25D39DE139F406ED02945EEE" BuildableName="Grademaxxing.app" BlueprintName="Grademaxxing" ReferencedContainer="container:Grademaxxing.xcodeproj"/></BuildableProductRunnable>
   </ProfileAction>
   <AnalyzeAction buildConfiguration="Debug"/>
-  <ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES"/>
+  <ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="NO"/>
 </Scheme>

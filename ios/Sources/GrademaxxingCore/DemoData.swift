@@ -23,7 +23,7 @@ public enum DemoData {
     _ mark: String, _ first: String, _ second: String
   ) -> Course {
     Course(
-      wireID: id, title: name, period: period, teacher: teacher, room: "Demo room",
+      wireID: id, title: name, period: period, teacher: teacher, room: "D0\(period)",
       officialMark: mark, officialPercent: percent,
       assignments: [
         Assignment(

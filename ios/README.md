@@ -11,7 +11,7 @@ See [the implementation plan](PLAN.md) for the full roadmap and [validation evid
 - A local what-if calculator that adds a hypothetical assignment to authoritative category totals. It refuses to project when required values are missing or the calculated baseline differs from the official mark by more than 0.25 percentage points.
 - An assignment planner for editing scores, exclusion, extra credit, and hypothetical work, with reset and target-score estimates. Native assignment-date charts are anchored to the current official mark and labeled as estimated history.
 - Editable current-course GPA planner following the web app's explicitly provisional PUSD scale, with credits, inclusion, and rigor choices.
-- A native School tab with attendance history and period details, official course totals, an event calendar with month navigation, schedule, and student profile.
+- Native school tools with attendance history and period details, official course totals, an event calendar with month navigation, schedule, and student profile.
 - Searchable documents and a read-only mailbox with folder/unread filters, native message text, explicit HTTPS links, on-demand attachments, and native file previews.
 - Synthetic demo mode, native loading/empty/error states, accessibility identifiers, and Dynamic Type text.
 
@@ -23,6 +23,17 @@ Open `Grademaxxing.xcodeproj`. The shared `Grademaxxing` scheme targets iPhone w
 
 Choose an installed iPhone simulator and run. For a physical phone, select your Apple Developer team in the target's **Signing & Capabilities** settings, and choose an available bundle identifier. No signing team or credentials are checked in.
 
+Because regeneration replaces project settings, a command-line override is easier to repeat than a setting that `generate-project.py` drops. This signs, installs, and runs the scheme (and its UI tests) on a device, using your own Apple Development identity with automatic provisioning:
+
+```sh
+xcodebuild test -project Grademaxxing.xcodeproj -scheme Grademaxxing \
+  -destination 'platform=iOS,id=<device-udid>' \
+  -derivedDataPath DerivedData \
+  -allowProvisioningUpdates DEVELOPMENT_TEAM=<team-id>
+```
+
+List devices with `xcrun devicectl list devices` (it needs full Xcode, so export `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` first if `xcode-select` points at the Command Line Tools). Automatic provisioning requires the Apple ID already added to Xcode, and the device must have Developer Mode enabled, trust this Mac, and stay unlocked during a run. Use `build` or `build-for-testing` instead of `test` to sign without installing or running.
+
 An iOS build requires full Xcode and an installed simulator runtime; Command Line Tools alone are insufficient. After installing Xcode, the simulator build command is:
 
 ```sh
@@ -32,9 +43,9 @@ xcodebuild -project Grademaxxing.xcodeproj -scheme Grademaxxing \
   -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build
 ```
 
-`App/Info.plist` configures `GrademaxxingAPIOrigin`, initially `https://dev.grademaxxing.app` for pre-production. Set this deliberately to the approved HTTPS origin when validating a deployment. The client rejects HTTP, embedded credentials, and non-origin API addresses. It never follows redirects while carrying a session. District portal credentials must only go to the intended Grademaxxing deployment.
+`App/Info.plist` reads `GrademaxxingAPIOrigin` from the `GRADEMAXXING_API_ORIGIN` build setting: Debug uses `https://dev.grademaxxing.app`, and Release uses `https://grademaxxing.app`. Version and build number also come from build settings. A missing or unresolved Release origin fails closed. The client rejects HTTP, embedded credentials, and non-origin API addresses. It never follows redirects while carrying a session. District portal credentials must only go to the intended Grademaxxing deployment.
 
-The shared scheme also includes the `GrademaxxingUITests` target. Once a simulator is available, use **Product → Test** to run the seven synthetic cases for what-if versus official grades, assignment editing/reset, reporting-period switching and assignment search, school records/month navigation, document/mail/attachment preview navigation, planner inclusion/reset, and leaving the demo. Their source is syntax-checked here but has not been compiled or run with XCTest. They explicitly launch with `--demo`; they must never be repurposed to screenshot a live student account.
+The shared scheme includes `GrademaxxingUITests`: synthetic navigation, calculations and resets, reporting periods/search, school records, file previews, sign-out, native tab-state preservation, and primary-screen accessibility audits. The Xcode laptop compiles and runs this suite on the dedicated demo simulator; see [VALIDATION.md](VALIDATION.md) for exact current counts, runtime coverage, and documented audit exclusions. Always select `GrademaxxingUITests/GrademaxxingUITests` explicitly to exclude unrelated untracked live-account tests. Every case launches `--demo` and must never be repurposed to screenshot a live student account.
 
 ## Checks without Xcode
 
@@ -49,7 +60,7 @@ bash scripts/check-catalyst.sh
 
 `GrademaxxingChecks` is an executable Swift test suite so it works even with Command Line Tools, which lacks XCTest and Swift Testing. It exercises API requests, session rotation/restoration/expiry/logout, concurrency, XML contracts, and calculation behavior. All transport responses and credentials are synthetic. No live school requests, Keychain secrets, or external dependencies are involved.
 
-The current suite contains 73 checks, including ten assignment-planning cases generated by the actual web rules, backend attendance/document contract fidelity, mail text and unread semantics, all implemented resource endpoints, real URLSession response bounds with a synthetic URLProtocol, file signature/type/size validation, private temporary-file lifecycle, invalidation after account/month changes, and sign-out races involving a slow read and a late login.
+The current suite contains 75 checks, including ten assignment-planning cases generated by the actual web rules, backend attendance/document contract fidelity, mail text and unread semantics, all implemented resource endpoints, real URLSession response bounds with a synthetic URLProtocol, file signature/type/size validation, private temporary-file lifecycle, invalidation after account/month changes, and sign-out races involving a slow read and a late login.
 
 `check-catalyst.sh` uses the Mac Catalyst UIKit/Quick Look frameworks shipped in the installed macOS SDK to compile the shared core module and type-check the iOS source branches. It caught and verified a fix for Swift 6 isolation in the Quick Look delegate. It is additional compiler coverage, not an iPhone build, simulator test, or Quick Look runtime test. The script requires an SDK containing those frameworks.
 
@@ -117,8 +128,15 @@ Live school testing requires explicit authorization and a designated test accoun
 
 ## Before distribution
 
-The app icon catalog and privacy manifest are scaffolds. The manifest sets tracking to false and currently lists no required-reason APIs. Its empty collected-data list is not a finalized privacy disclosure: reconcile the complete app/backend data flow with App Store privacy answers before shipping. Complete the icon, signing, license/attribution, privacy, school/vendor review, iPhone QA, and native CI gates in the plan before TestFlight or App Store submission.
+See [RELEASE.md](RELEASE.md) for the current App Store preparation and outstanding gates. An opaque 1024 × 1024 icon is generated from the existing native brand mark. The privacy manifest declares linked backend usage data with tracking disabled and no required-reason APIs; reconcile its candidate declarations with the deployed service and final App Store answers. Native data-handling details and bundled AGPL/project/font notices are accessible from Account. Signing, public privacy/support updates, source/license distribution review, iPhone QA, and a signed distribution artifact remain open.
+
+Run `python3 scripts/release-preflight.py` for source release checks. `bash scripts/archive.sh --unsigned` creates and inspects a headless Release device archive on full Xcode 26+; `--signed` uses a command-scoped `GRADEMAXXING_DEVELOPMENT_TEAM`. Neither command uploads or submits a build. After editing the root license or notices, run `python3 scripts/bundle-notices.py`. The shared archive action does not reveal Organizer.
 
 This directory remains under the parent repository's license and attribution obligations. Grademaxxing is independent of Edupoint and school districts. StudentVUE is a trademark of Edupoint.
 
 Native API choices follow Apple's [NavigationStack documentation](https://developer.apple.com/documentation/swiftui/navigationstack), [Keychain services documentation](https://developer.apple.com/documentation/security/keychain-services), and [Quick Look documentation](https://developer.apple.com/documentation/quicklook).
+
+
+## School district picker
+
+The sign-in screen uses the same 829-entry public district snapshot as the web app (`src/lib/data/districts.ts`), bundled locally in `App/Assets.xcassets/DistrictCatalog.dataset`. District names, state names and portal addresses are searchable in the web picker’s ranking/order. Pleasanton Unified is the initial selection. Picking a district supplies its HTTPS address, retaining paths such as `/svue`; manual portal entry remains available. The catalog search does not contact StudentVUE or send credentials. Keep this snapshot synchronized with the web source when district data changes.

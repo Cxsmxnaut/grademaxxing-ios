@@ -83,7 +83,8 @@ for name in ['Debug', 'Release']:
     app = {
         'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
         'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME': 'AccentColor',
-        'CODE_SIGN_STYLE': 'Automatic', 'CURRENT_PROJECT_VERSION': '1', 'MARKETING_VERSION': '0.1.0',
+        'CODE_SIGN_STYLE': 'Automatic', 'CURRENT_PROJECT_VERSION': '1', 'MARKETING_VERSION': '1.0.0',
+        'GRADEMAXXING_API_ORIGIN': 'https://dev.grademaxxing.app' if name == 'Debug' else 'https://grademaxxing.app',
         'GENERATE_INFOPLIST_FILE': 'NO', 'INFOPLIST_FILE': 'App/Info.plist',
         'PRODUCT_BUNDLE_IDENTIFIER': 'app.grademaxxing.native', 'PRODUCT_NAME': '$(TARGET_NAME)',
         'SUPPORTED_PLATFORMS': 'iphoneos iphonesimulator', 'TARGETED_DEVICE_FAMILY': '1',
@@ -131,7 +132,7 @@ scheme = f'''<?xml version="1.0" encoding="UTF-8"?>
     <BuildableProductRunnable runnableDebuggingMode="0"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{target}" BuildableName="Grademaxxing.app" BlueprintName="Grademaxxing" ReferencedContainer="container:Grademaxxing.xcodeproj"/></BuildableProductRunnable>
   </ProfileAction>
   <AnalyzeAction buildConfiguration="Debug"/>
-  <ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES"/>
+  <ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="NO"/>
 </Scheme>
 '''
 

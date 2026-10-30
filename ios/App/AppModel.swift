@@ -39,8 +39,14 @@ final class AppModel {
 
   init() {
     let configured = Bundle.main.object(forInfoDictionaryKey: "GrademaxxingAPIOrigin") as? String
-    // Keep the first native build pointed at pre-production. Change Info.plist deliberately for release.
-    let candidate = URL(string: configured ?? "https://dev.grademaxxing.app")
+    // SwiftPM previews have no app plist. Xcode builds must use their explicit configuration;
+    // a missing or unexpanded setting must never silently send credentials to another service.
+    #if DEBUG
+      let fallback = "https://dev.grademaxxing.app"
+    #else
+      let fallback = ""
+    #endif
+    let candidate = URL(string: configured ?? fallback)
     let configuration = candidate.flatMap { try? ServiceConfiguration(origin: $0) }
     serviceOrigin = configuration?.origin ?? URL(string: "https://dev.grademaxxing.app")!
     api = configuration.map {
