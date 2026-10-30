@@ -366,8 +366,10 @@ extension View {
       while let candidate = pending.popLast() {
         pending.append(contentsOf: candidate.subviews)
         guard let bar = candidate as? UISearchBar,
-          let current = bar.searchTextField.attributedPlaceholder, current.length > 0
+          let placeholder = bar.searchTextField.placeholder, !placeholder.isEmpty
         else { continue }
+        let current =
+          bar.searchTextField.attributedPlaceholder ?? NSAttributedString(string: placeholder)
         let color = UIColor(Theme.muted).resolvedColor(with: bar.traitCollection)
         let readable = NSMutableAttributedString(attributedString: current)
         readable.addAttribute(

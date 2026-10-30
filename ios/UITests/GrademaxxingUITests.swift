@@ -172,6 +172,7 @@ final class GrademaxxingUITests: XCTestCase {
     let official = app.staticTexts["course.officialPercent"]
     XCTAssertTrue(official.waitForExistence(timeout: 5))
     app.tabBars.buttons["Attendance"].tap()
+    bringIntoView(app.buttons["attendance.record.2026-10-08"], in: app)
     XCTAssertTrue(app.buttons["attendance.record.2026-10-08"].waitForExistence(timeout: 5))
     app.tabBars.buttons["Grades"].tap()
     XCTAssertTrue(official.waitForExistence(timeout: 5))
@@ -197,6 +198,7 @@ final class GrademaxxingUITests: XCTestCase {
     XCTAssertTrue(app.staticTexts["planner.weighted"].waitForExistence(timeout: 5))
     capture("03-gpa")
     app.tabBars.buttons["Attendance"].tap()
+    bringIntoView(app.buttons["attendance.record.2026-10-08"], in: app)
     XCTAssertTrue(app.buttons["attendance.record.2026-10-08"].waitForExistence(timeout: 5))
     capture("04-attendance")
   }
@@ -211,12 +213,17 @@ final class GrademaxxingUITests: XCTestCase {
     bringIntoView(whatIf, in: app)
     whatIf.tap()
     let projection = app.staticTexts["whatif.projectedPercent"]
+    bringIntoView(projection, in: app)
     XCTAssertTrue(projection.waitForExistence(timeout: 5))
     let originalProjection = projection.label
     let score = app.textFields["whatif.earned"]
+    bringIntoView(score, in: app, furtherDown: false)
     score.tap()
     let current = score.value as? String ?? ""
     score.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count) + "100")
+    let dismissKeyboard = app.buttons["Dismiss keyboard"]
+    if dismissKeyboard.exists { dismissKeyboard.tap() }
+    bringIntoView(projection, in: app)
     XCTAssertNotEqual(projection.label, originalProjection)
     app.buttons["Done"].tap()
     XCTAssertEqual(official.label, original)
@@ -278,13 +285,19 @@ final class GrademaxxingUITests: XCTestCase {
     let app = launchDemo()
     openMenu("school", in: app)
     app.buttons["school.attendance"].tap()
+    bringIntoView(app.buttons["attendance.record.2026-10-08"], in: app)
     XCTAssertTrue(app.buttons["attendance.record.2026-10-08"].waitForExistence(timeout: 5))
     app.buttons["attendance.record.2026-10-08"].tap()
-    XCTAssertTrue(app.staticTexts["Synthetic excused appointment"].exists)
+    let reason = app.staticTexts["Synthetic excused appointment"]
+    bringIntoView(reason, in: app)
+    XCTAssertTrue(reason.exists)
     app.navigationBars.buttons.element(boundBy: 0).tap()
     app.navigationBars.buttons.element(boundBy: 0).tap()
-    app.buttons["school.calendar"].tap()
+    let calendar = app.buttons["school.calendar"]
+    bringIntoView(calendar, in: app)
+    calendar.tap()
     let month = app.staticTexts["calendar.month"]
+    bringIntoView(month, in: app)
     XCTAssertTrue(month.waitForExistence(timeout: 5))
     let originalMonth = month.label
     app.buttons["calendar.nextMonth"].tap()
@@ -292,10 +305,16 @@ final class GrademaxxingUITests: XCTestCase {
     app.buttons["calendar.previousMonth"].tap()
     XCTAssertEqual(month.label, originalMonth)
     app.navigationBars.buttons.element(boundBy: 0).tap()
-    app.buttons["school.schedule"].tap()
+    let schedule = app.buttons["school.schedule"]
+    bringIntoView(schedule, in: app)
+    schedule.tap()
+    bringIntoView(app.staticTexts["AP Calculus"].firstMatch, in: app)
     XCTAssertTrue(app.staticTexts["AP Calculus"].waitForExistence(timeout: 5))
     app.navigationBars.buttons.element(boundBy: 0).tap()
-    app.buttons["school.profile"].tap()
+    let profile = app.buttons["school.profile"]
+    bringIntoView(profile, in: app)
+    profile.tap()
+    bringIntoView(app.staticTexts["Demo Student"].firstMatch, in: app)
     XCTAssertTrue(app.staticTexts["Demo Student"].firstMatch.waitForExistence(timeout: 5))
   }
 
@@ -328,12 +347,14 @@ final class GrademaxxingUITests: XCTestCase {
     let licenses = app.buttons["account.licenses"]
     bringIntoView(licenses, in: app)
     licenses.tap()
+    bringIntoView(app.buttons["licenses.agpl"], in: app)
     XCTAssertTrue(app.buttons["licenses.agpl"].waitForExistence(timeout: 5))
     app.buttons["licenses.agpl"].tap()
     XCTAssertTrue(app.staticTexts["licenses.text"].waitForExistence(timeout: 5))
     XCTAssertTrue(
       app.staticTexts["licenses.text"].label.contains("GNU AFFERO GENERAL PUBLIC LICENSE"))
     app.navigationBars.buttons.element(boundBy: 0).tap()
+    bringIntoView(app.buttons["licenses.fonts"], in: app)
     app.buttons["licenses.fonts"].tap()
     XCTAssertTrue(app.staticTexts["licenses.text"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["licenses.text"].label.contains("SIL OPEN FONT LICENSE"))
