@@ -77,12 +77,24 @@ jobs:
             -only-testing:GrademaxxingUITests/GrademaxxingUITests \
             -resultBundlePath "$RUNNER_TEMP/NativeTests.xcresult" \
             -derivedDataPath "$RUNNER_TEMP/NativeDerivedData" CODE_SIGNING_ALLOWED=NO
+      - name: Export headless test summaries and synthetic screenshots
+        if: always()
+        run: |
+          if [[ -d "$RUNNER_TEMP/NativeTests.xcresult" ]]; then
+            xcrun xcresulttool get test-results summary --path "$RUNNER_TEMP/NativeTests.xcresult" > "$RUNNER_TEMP/NativeTestSummary.json"
+            xcrun xcresulttool get test-results tests --path "$RUNNER_TEMP/NativeTests.xcresult" > "$RUNNER_TEMP/NativeTestCases.json"
+            xcrun xcresulttool export attachments --path "$RUNNER_TEMP/NativeTests.xcresult" --output-path "$RUNNER_TEMP/NativeTestAttachments"
+          fi
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: native-test-results-${{ matrix.label }}
-          path: ${{ runner.temp }}/NativeTests.xcresult
+          path: |
+            ${{ runner.temp }}/NativeTests.xcresult
+            ${{ runner.temp }}/NativeTestSummary.json
+            ${{ runner.temp }}/NativeTestCases.json
+            ${{ runner.temp }}/NativeTestAttachments
           if-no-files-found: ignore
           retention-days: 7
 

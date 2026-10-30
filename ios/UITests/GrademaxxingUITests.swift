@@ -289,7 +289,7 @@ final class GrademaxxingUITests: XCTestCase {
     privacy.tap()
     XCTAssertTrue(app.navigationBars["Data and privacy"].waitForExistence(timeout: 5))
     XCTAssertTrue(
-      app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "over HTTPS")).firstMatch
+      app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "over HTTPS")).firstMatch
         .exists)
     app.navigationBars.buttons.element(boundBy: 0).tap()
     let licenses = app.buttons["account.licenses"]
