@@ -317,17 +317,13 @@ extension View {
       self
     #endif
   }
-  /// Pins the search field so it stays reachable. The iOS default hides the field for an
-  /// inline title on iOS 27, which removes the search affordance from the accessibility tree.
+  /// Keep a native, readable search field pinned below navigation at every text size.
   @ViewBuilder func alwaysVisibleSearch(text: Binding<String>, prompt: String) -> some View {
     #if os(iOS)
-      self.searchable(
-        text: text, placement: .navigationBarDrawer(displayMode: .always),
-        prompt: prompt
-      )
-      .background {
-        ReadableSearchField().frame(width: 0, height: 0).accessibilityHidden(true)
-      }
+      self.safeAreaInset(edge: .top, spacing: 0) {
+        ReadableSearchField(text: text, prompt: prompt)
+          .padding(.horizontal, 16).padding(.vertical, 8).background(Theme.background)
+      }.scrollDismissesKeyboard(.interactively)
     #else
       self.searchable(text: text, prompt: prompt)
     #endif
@@ -335,46 +331,60 @@ extension View {
 }
 
 #if os(iOS)
-  /// SwiftUI's searchable prompt drops Text foreground attributes on some iOS versions.
-  /// Style the public UISearchBar search field after navigation installs it, retaining its
-  /// native search behavior, font, accessible label, and attributed placeholder contents.
-  private struct ReadableSearchField: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> SearchFieldStyleController {
-      SearchFieldStyleController()
+  /// Own the native field directly so placeholder contrast and Dynamic Type height do not
+  /// depend on SwiftUI's navigation-search implementation or private view hierarchy details.
+  private struct ReadableSearchField: UIViewRepresentable {
+    @Binding var text: String
+    let prompt: String
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+    func makeUIView(context: Context) -> UISearchTextField {
+      let field = UISearchTextField(frame: .zero)
+      field.delegate = context.coordinator
+      field.addTarget(
+        context.coordinator, action: #selector(Coordinator.changed(_:)), for: .editingChanged)
+      field.autocapitalizationType = .none
+      field.autocorrectionType = .no
+      field.returnKeyType = .search
+      field.clearButtonMode = .whileEditing
+      field.adjustsFontForContentSizeCategory = true
+      field.accessibilityTraits.insert(.searchField)
+      return field
     }
-    func updateUIViewController(_ controller: SearchFieldStyleController, context: Context) {
-      controller.updateSearchFields()
+    func updateUIView(_ field: UISearchTextField, context: Context) {
+      context.coordinator.parent = self
+      if field.text != text { field.text = text }
+      field.isEnabled = context.environment.isEnabled
+      field.font = UIFont.preferredFont(forTextStyle: .body, compatibleWith: field.traitCollection)
+      field.textColor = .label
+      field.tintColor = UIColor(Theme.accent)
+      field.backgroundColor = UIColor(Theme.secondarySurface)
+      field.accessibilityLabel = prompt
+      field.attributedPlaceholder = NSAttributedString(
+        string: prompt, attributes: [.foregroundColor: UIColor(Theme.muted)])
     }
-  }
-
-  private final class SearchFieldStyleController: UIViewController {
-    override func loadView() {
-      view = UIView()
-      view.isUserInteractionEnabled = false
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UISearchTextField, context: Context)
+      -> CGSize?
+    {
+      let width = proposal.width.flatMap { $0.isFinite ? max(0, $0) : nil } ?? 320
+      return CGSize(width: width, height: max(44, (uiView.font?.lineHeight ?? 21) + 20))
     }
-    override func viewDidAppear(_ animated: Bool) {
-      super.viewDidAppear(animated)
-      updateSearchFields()
+    static func dismantleUIView(_ field: UISearchTextField, coordinator: Coordinator) {
+      field.delegate = nil
+      field.removeTarget(
+        coordinator, action: #selector(Coordinator.changed(_:)), for: .editingChanged)
+      field.resignFirstResponder()
     }
-    override func viewDidLayoutSubviews() {
-      super.viewDidLayoutSubviews()
-      updateSearchFields()
-    }
-    func updateSearchFields() {
-      guard let window = viewIfLoaded?.window else { return }
-      var pending: [UIView] = [window]
-      while let candidate = pending.popLast() {
-        pending.append(contentsOf: candidate.subviews)
-        guard let bar = candidate as? UISearchBar,
-          let placeholder = bar.searchTextField.placeholder, !placeholder.isEmpty
-        else { continue }
-        let current =
-          bar.searchTextField.attributedPlaceholder ?? NSAttributedString(string: placeholder)
-        let color = UIColor(Theme.muted).resolvedColor(with: bar.traitCollection)
-        let readable = NSMutableAttributedString(attributedString: current)
-        readable.addAttribute(
-          .foregroundColor, value: color, range: NSRange(location: 0, length: readable.length))
-        if !current.isEqual(to: readable) { bar.searchTextField.attributedPlaceholder = readable }
+    @MainActor final class Coordinator: NSObject, UITextFieldDelegate {
+      var parent: ReadableSearchField
+      init(_ parent: ReadableSearchField) { self.parent = parent }
+      @objc func changed(_ field: UISearchTextField) { parent.text = field.text ?? "" }
+      func textFieldShouldClear(_ textField: UITextField) -> Bool {
+        parent.text = ""
+        return true
+      }
+      func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
       }
     }
   }

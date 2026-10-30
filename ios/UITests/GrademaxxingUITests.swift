@@ -36,9 +36,13 @@ final class GrademaxxingUITests: XCTestCase {
         if furtherDown { app.swipeUp() } else { app.swipeDown() }
         continue
       }
-      let top =
+      var top =
         app.navigationBars.firstMatch.exists
         ? app.navigationBars.firstMatch.frame.maxY : app.frame.minY + 44
+      let search = app.searchFields.firstMatch
+      if element.elementType != .searchField, search.exists, search.isHittable {
+        top = max(top, search.frame.maxY + 8)
+      }
       let tabBar = app.tabBars.firstMatch
       let bottom =
         tabBar.exists && tabBar.isHittable ? tabBar.frame.minY - 8 : app.frame.maxY - 16
@@ -442,10 +446,14 @@ final class GrademaxxingUITests: XCTestCase {
     bringIntoView(include, in: app)
     XCTAssertTrue(include.exists, "Expected the math inclusion switch")
     XCTAssertEqual(include.value as? String, "1")
-    // The switch element covers the whole row and the row's text area does not move the control, so
-    // tap the trailing edge of a fully visible row. Assert the estimate rather than the switch
-    // again: after the control moves, runtimes differ on whether the row stays queryable.
-    include.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+    // Some runtimes expose a row wrapper and a native switch beneath it. Prefer the actual
+    // control's hit point; retain the trailing-edge fallback for a single-element tree.
+    let nativeSwitch = include.descendants(matching: .switch).firstMatch
+    if nativeSwitch.exists {
+      nativeSwitch.tap()
+    } else {
+      include.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+    }
     XCTAssertTrue(
       app.navigationBars["GPA calculator"].exists,
       "The inclusion tap left the GPA calculator; app state \(app.state)")

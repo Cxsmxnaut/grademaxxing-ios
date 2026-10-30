@@ -83,10 +83,7 @@ struct CourseView: View {
                 x: .value("Date", point.date.localDate), y: .value("Percentage", point.percentage)
               )
               .foregroundStyle(Theme.accent)
-              PointMark(
-                x: .value("Date", point.date.localDate), y: .value("Percentage", point.percentage)
-              )
-              .foregroundStyle(Theme.accent)
+              .symbol(.circle)
               .accessibilityLabel(point.assignments.joined(separator: ", "))
               .accessibilityValue("\(point.date.iso), \(point.percentage.formatted()) percent")
             }.chartYScale(domain: GradeSimulation.chartDomain(trend.map(\.percentage)))

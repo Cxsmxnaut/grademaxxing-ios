@@ -158,7 +158,7 @@ private struct CourseRow: View {
       if let percent = course.officialPercent { GradeMeter(percent: percent) }
     }.padding(18).frame(maxWidth: .infinity, alignment: .leading)
       .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-      .accessibilityElement(children: .ignore).accessibilityLabel(spokenSummary)
+      .accessibilityElement(children: .combine).accessibilityLabel(spokenSummary)
   }
   private var grade: some View {
     Text(course.officialMark.isEmpty ? "—" : course.officialMark)
