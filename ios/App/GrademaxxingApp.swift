@@ -127,7 +127,7 @@ private struct AppShell: View {
         .tabItem { Label(item.title, systemImage: item.symbol) }
         .tag(item)
       }
-    }.tint(Theme.accent)
+    }.tint(Theme.accent).readableBottomEdge()
       .sheet(isPresented: $showMenu) { menu.privacyShield() }
   }
   private func navigationPath(for item: AppSection) -> Binding<[AppRoute]> {

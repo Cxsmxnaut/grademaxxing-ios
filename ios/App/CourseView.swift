@@ -90,13 +90,23 @@ struct CourseView: View {
               .accessibilityLabel(point.assignments.joined(separator: ", "))
               .accessibilityValue("\(point.date.iso), \(point.percentage.formatted()) percent")
             }.chartYScale(domain: GradeSimulation.chartDomain(trend.map(\.percentage)))
+              .chartXScale(
+                range: .plotDimension(padding: dynamicTypeSize.isAccessibilitySize ? 36 : 20)
+              )
               .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 3)) { _ in
                   AxisValueLabel(format: .dateTime.month(.defaultDigits).day())
                     .font(.caption2).foregroundStyle(Theme.muted)
                 }
               }
-              .frame(height: 180).accessibilityIdentifier("course.trend")
+              .chartYAxis {
+                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
+                  AxisGridLine()
+                  AxisValueLabel().font(.caption2).foregroundStyle(Theme.muted)
+                }
+              }
+              .frame(height: dynamicTypeSize.isAccessibilitySize ? 280 : 180)
+              .accessibilityIdentifier("course.trend")
             Text(
               "Calculated from available assignment dates and anchored to the latest official mark. This is an estimate of past grades."
             )
@@ -124,11 +134,11 @@ struct CourseView: View {
         }.listRowBackground(Theme.surface)
       }
       Section {
-        Picker("Assignment filter", selection: $filter) {
-          Text("All").tag("All")
-          Text("Graded").tag("Graded")
-          Text("Ungraded").tag("Ungraded")
-        }.pickerStyle(.segmented).listRowBackground(Theme.surface)
+        if dynamicTypeSize.isAccessibilitySize {
+          assignmentFilter.pickerStyle(.menu)
+        } else {
+          assignmentFilter.pickerStyle(.segmented)
+        }
         if assignments.isEmpty {
           Text(query.isEmpty ? "No assignments to show." : "No matching assignments.")
             .foregroundStyle(.secondary)
@@ -162,6 +172,13 @@ struct CourseView: View {
       .alwaysVisibleSearch(text: $query, prompt: "Search assignments")
       .sheet(isPresented: $showWhatIf) { WhatIfView(course: course) }
       .sheet(isPresented: $showAssignmentPlanner) { AssignmentPlannerView(course: course) }
+  }
+  private var assignmentFilter: some View {
+    Picker("Assignment filter", selection: $filter) {
+      Text("All").tag("All")
+      Text("Graded").tag("Graded")
+      Text("Ungraded").tag("Ungraded")
+    }.listRowBackground(Theme.surface)
   }
 }
 

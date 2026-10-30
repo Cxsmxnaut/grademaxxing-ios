@@ -38,11 +38,23 @@ final class GrademaxxingUITests: XCTestCase {
       }
       let top =
         app.navigationBars.firstMatch.exists
-        ? app.navigationBars.firstMatch.frame.maxY : app.buttons["app.menu"].frame.maxY
-      let bottom = app.tabBars.firstMatch.frame.minY - 8
+        ? app.navigationBars.firstMatch.frame.maxY : app.frame.minY + 44
+      let tabBar = app.tabBars.firstMatch
+      let bottom =
+        tabBar.exists && tabBar.isHittable ? tabBar.frame.minY - 8 : app.frame.maxY - 16
       if element.frame.minY >= top, element.frame.maxY <= bottom { return }
       if element.frame.maxY > bottom { app.swipeUp() } else { app.swipeDown() }
     }
+  }
+
+  @MainActor private func openCourse(_ id: String = "math", in app: XCUIApplication) {
+    let course = app.buttons["course." + id]
+    bringIntoView(course, in: app)
+    XCTAssertTrue(course.isHittable)
+    course.tap()
+    let official = app.staticTexts["course.officialPercent"]
+    XCTAssertTrue(official.waitForExistence(timeout: 5))
+    bringIntoView(official, in: app, furtherDown: false)
   }
 
   @MainActor private func openMenu(_ destination: String, in app: XCUIApplication) {
@@ -70,7 +82,7 @@ final class GrademaxxingUITests: XCTestCase {
     // A class chosen in the menu opens the same native course screen as its gradebook row.
     app.buttons["app.menu"].tap()
     let course = app.buttons["menu.course.math"]
-    for _ in 0..<3 where !course.isHittable { app.swipeUp() }
+    bringIntoView(course, in: app)
     course.tap()
     XCTAssertTrue(app.staticTexts["course.officialPercent"].waitForExistence(timeout: 5))
     app.navigationBars.buttons.element(boundBy: 0).tap()
@@ -105,15 +117,18 @@ final class GrademaxxingUITests: XCTestCase {
         let expectedSystemRendering = nativeSearch || behindTabBar || unmappedCoveredDemoRow
         let description =
           "\(issue.compactDescription)\n\(issue.detailedDescription)\nLabel: \(label)\nFrame: \(String(describing: element?.frame))\nType: \(String(describing: element?.elementType))"
+        print("Accessibility audit: \(description)")
         XCTContext.runActivity(named: "Audit diagnosis") { activity in
           let attachment = XCTAttachment(string: description)
           attachment.name =
             expectedSystemRendering ? "Native rendering exclusion" : "Audit diagnosis"
           attachment.lifetime = .keepAlways
           activity.add(attachment)
-          if unmappedCoveredDemoRow {
+          if !expectedSystemRendering || unmappedCoveredDemoRow {
             let screenshot = XCTAttachment(screenshot: app.screenshot())
-            screenshot.name = "Review unmapped contrast under native tab bar"
+            screenshot.name =
+              expectedSystemRendering
+              ? "Review unmapped contrast under native tab bar" : "Audit failure"
             screenshot.lifetime = .keepAlways
             activity.add(screenshot)
           }
@@ -122,7 +137,7 @@ final class GrademaxxingUITests: XCTestCase {
       }
     }
     try audit()
-    app.buttons["course.math"].tap()
+    openCourse(in: app)
     XCTAssertTrue(app.staticTexts["course.officialPercent"].waitForExistence(timeout: 5))
     try audit()
     app.navigationBars.buttons.element(boundBy: 0).tap()
@@ -140,7 +155,7 @@ final class GrademaxxingUITests: XCTestCase {
   @MainActor func testNativeTabsPreserveCourseNavigation() {
     let app = launchDemo()
     XCTAssertEqual(app.tabBars.buttons.count, 4)
-    app.buttons["course.math"].tap()
+    openCourse(in: app)
     let official = app.staticTexts["course.officialPercent"]
     XCTAssertTrue(official.waitForExistence(timeout: 5))
     app.tabBars.buttons["Attendance"].tap()
@@ -161,7 +176,7 @@ final class GrademaxxingUITests: XCTestCase {
       add(attachment)
     }
     capture("01-gradebook")
-    app.buttons["course.math"].tap()
+    openCourse(in: app)
     XCTAssertTrue(app.staticTexts["course.officialPercent"].waitForExistence(timeout: 5))
     capture("02-course")
     app.navigationBars.buttons.element(boundBy: 0).tap()
@@ -175,11 +190,13 @@ final class GrademaxxingUITests: XCTestCase {
 
   @MainActor func testWhatIfLeavesOfficialGradeUnchanged() {
     let app = launchDemo()
-    app.buttons["course.math"].tap()
+    openCourse(in: app)
     let official = app.staticTexts["course.officialPercent"]
     XCTAssertTrue(official.waitForExistence(timeout: 5))
     let original = official.label
-    app.buttons["course.whatif"].tap()
+    let whatIf = app.buttons["course.whatif"]
+    bringIntoView(whatIf, in: app)
+    whatIf.tap()
     let projection = app.staticTexts["whatif.projectedPercent"]
     XCTAssertTrue(projection.waitForExistence(timeout: 5))
     let originalProjection = projection.label
@@ -196,7 +213,7 @@ final class GrademaxxingUITests: XCTestCase {
     let app = launchDemo()
     app.buttons["grades.period"].tap()
     app.buttons["Semester 2"].tap()
-    app.buttons["course.english"].tap()
+    openCourse("english", in: app)
     XCTAssertEqual(app.staticTexts["course.officialPercent"].label, "Official grade: 91 percent")
     let search = app.searchFields.firstMatch
     bringIntoView(search, in: app)
@@ -212,23 +229,26 @@ final class GrademaxxingUITests: XCTestCase {
 
   @MainActor func testAssignmentEditsAndResetPreserveOfficialMark() {
     let app = launchDemo()
-    app.buttons["course.math"].tap()
+    openCourse(in: app)
     let official = app.staticTexts["course.officialPercent"]
     XCTAssertTrue(official.waitForExistence(timeout: 5))
     let officialMark = official.label
     let planner = app.buttons["course.assignmentPlanner"]
-    for _ in 0..<3 where !planner.isHittable { app.swipeUp() }
+    bringIntoView(planner, in: app)
     planner.tap()
     let estimate = app.staticTexts["simulation.projected"]
     XCTAssertTrue(estimate.waitForExistence(timeout: 5))
     let original = estimate.label
-    app.buttons["simulation.assignment.math-1"].tap()
+    let assignment = app.buttons["simulation.assignment.math-1"]
+    bringIntoView(assignment, in: app)
+    assignment.tap()
     let score = app.textFields["simulation.earned"]
     XCTAssertTrue(score.waitForExistence(timeout: 5))
     score.tap()
     let current = score.value as? String ?? ""
     score.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count) + "25")
     app.navigationBars["Edit estimate"].buttons.element(boundBy: 0).tap()
+    bringIntoView(estimate, in: app, furtherDown: false)
     XCTAssertTrue(estimate.waitForExistence(timeout: 5))
     XCTAssertNotEqual(estimate.label, original)
     let reset = app.buttons["simulation.reset"]
@@ -413,6 +433,7 @@ final class GrademaxxingUITests: XCTestCase {
     app.tabBars.buttons["Documents"].tap()
     XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 5))
     let document = app.buttons["document.c3ludGhldGljLWRvY3VtZW50"]
+    bringIntoView(document, in: app)
     XCTAssertTrue(document.waitForExistence(timeout: 5))
     document.tap()
     XCTAssertTrue(app.navigationBars["Synthetic document.pdf"].waitForExistence(timeout: 5))
@@ -420,10 +441,12 @@ final class GrademaxxingUITests: XCTestCase {
     app.tabBars.buttons["Mail"].tap()
     XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 5))
     let message = app.buttons["mail.message.11111111-2222-4333-8444-555555555555"]
+    bringIntoView(message, in: app)
     XCTAssertTrue(message.waitForExistence(timeout: 5))
     message.tap()
     XCTAssertTrue(app.staticTexts["mail.body"].waitForExistence(timeout: 5))
     let attachment = app.buttons["attachment.22222222-3333-4444-8555-666666666666"]
+    bringIntoView(attachment, in: app)
     XCTAssertTrue(attachment.exists)
     attachment.tap()
     XCTAssertTrue(app.navigationBars["Synthetic document.pdf"].waitForExistence(timeout: 5))

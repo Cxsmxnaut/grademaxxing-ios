@@ -24,14 +24,15 @@ struct GradesView: View {
                 HStack(spacing: 8) {
                   Text(book.selectedPeriod.name).font(.headline)
                   Image(systemName: "chevron.down").font(.caption.weight(.semibold))
-                }.frame(minHeight: 44)
+                }.frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
               }.buttonStyle(.plain).disabled(model.isWorking || model.needsReconnect)
                 .accessibilityLabel("Reporting period, " + book.selectedPeriod.name)
                 .accessibilityIdentifier("grades.period")
               if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
               Button(action: openPlanner) {
                 Label("GPA calculator", systemImage: "plus.forwardslash.minus")
-                  .font(.subheadline).frame(minHeight: 44)
+                  .font(.subheadline).frame(minWidth: 44, minHeight: 44)
+                  .contentShape(Rectangle())
               }.buttonStyle(.plain).foregroundStyle(Theme.accent)
                 .accessibilityIdentifier("grades.gpa")
             }

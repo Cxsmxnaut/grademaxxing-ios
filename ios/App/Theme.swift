@@ -250,6 +250,18 @@ extension View {
       self
     #endif
   }
+  /// Keep record text above the native tab bar readable instead of fading it into its scrim.
+  @ViewBuilder func readableBottomEdge() -> some View {
+    #if os(iOS)
+      if #available(iOS 26.0, *) {
+        self.scrollEdgeEffectHidden(true, for: .bottom)
+      } else {
+        self
+      }
+    #else
+      self
+    #endif
+  }
   @ViewBuilder func appRootChrome(_ isRoot: Bool) -> some View {
     if isRoot {
       navigationChromeVisible().largeRootTitle()
@@ -310,7 +322,8 @@ extension View {
   @ViewBuilder func alwaysVisibleSearch(text: Binding<String>, prompt: String) -> some View {
     #if os(iOS)
       self.searchable(
-        text: text, placement: .navigationBarDrawer(displayMode: .always), prompt: prompt)
+        text: text, placement: .navigationBarDrawer(displayMode: .always),
+        prompt: Text(prompt).foregroundColor(Theme.muted))
     #else
       self.searchable(text: text, prompt: prompt)
     #endif

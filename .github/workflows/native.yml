@@ -99,7 +99,6 @@ jobs:
           retention-days: 7
 
   archive:
-    needs: native
     runs-on: macos-26
     timeout-minutes: 25
     steps:
