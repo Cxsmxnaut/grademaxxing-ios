@@ -3,37 +3,41 @@ import SwiftUI
 
 struct GradesView: View {
   @Bindable var model: AppModel
+  var openPlanner: () -> Void = {}
   @State private var showReconnect = false
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   var body: some View {
     Group {
       if let book = model.gradebook {
         ScrollView {
           LazyVStack(alignment: .leading, spacing: 18) {
-            if model.isDemo {
-              NoticeView(
-                text: "Demo · All grades and assignments are invented.", symbol: "sparkles")
-            }
-            HStack {
-              VStack(alignment: .leading, spacing: 4) {
-                Text("OFFICIAL GRADES").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                Text(book.selectedPeriod.name).font(.title2.bold())
-              }
-              Spacer()
-              if model.isWorking { ProgressView().accessibilityLabel("Refreshing grades") }
-            }
-            if book.periods.count > 1 {
-              Picker(
-                "Reporting period",
-                selection: Binding(
-                  get: { book.selectedPeriod.index },
-                  set: { value in
-                    Task { await model.selectPeriod(value) }
-                  })
-              ) {
-                ForEach(book.periods) { Text($0.name).tag($0.index) }
-              }.pickerStyle(.menu).disabled(model.isWorking || model.needsReconnect)
+            let controls =
+              dynamicTypeSize.isAccessibilitySize
+              ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+              : AnyLayout(HStackLayout(spacing: 16))
+            controls {
+              Menu {
+                ForEach(book.periods) { period in
+                  Button(period.name) { Task { await model.selectPeriod(period.index) } }
+                }
+              } label: {
+                HStack(spacing: 8) {
+                  Text(book.selectedPeriod.name).font(.headline)
+                  Image(systemName: "chevron.down").font(.caption.weight(.semibold))
+                }.frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+              }.buttonStyle(.plain).disabled(model.isWorking || model.needsReconnect)
+                .accessibilityLabel("Reporting period, " + book.selectedPeriod.name)
                 .accessibilityIdentifier("grades.period")
+              if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
+              Button(action: openPlanner) {
+                Label("GPA calculator", systemImage: "plus.forwardslash.minus")
+                  .font(.subheadline).frame(minWidth: 44, minHeight: 44)
+                  .contentShape(Rectangle())
+              }.buttonStyle(.plain).foregroundStyle(Theme.accent)
+                .accessibilityIdentifier("grades.gpa")
             }
+            gpaSummary(book)
+            Text("Your classes").font(.title3.bold()).accessibilityAddTraits(.isHeader)
             if model.needsReconnect {
               NoticeView(
                 text: "StudentVUE needs you to reconnect. These grades are from your last refresh.",
@@ -51,9 +55,7 @@ struct GradesView: View {
                 description: Text("There are no courses in this reporting period."))
             }
             ForEach(book.courses) { course in
-              NavigationLink {
-                CourseView(course: course, detailed: book.detailed, isDemo: model.isDemo)
-              } label: {
+              NavigationLink(value: AppRoute.course(course.wireID)) {
                 CourseRow(course: course)
               }
               .buttonStyle(.plain).accessibilityIdentifier("course.\(course.wireID)")
@@ -81,7 +83,8 @@ struct GradesView: View {
           }.buttonStyle(.borderedProminent)
         }
       }
-    }.background(Theme.background).navigationTitle("Grades")
+    }.background(Theme.background).navigationTitle("Gradebook").largeRootTitle()
+      .navigationChromeVisible()
       .toolbar {
         ToolbarItem(placement: .primaryAction) {
           Button {
@@ -95,37 +98,107 @@ struct GradesView: View {
       }
       .sheet(isPresented: $showReconnect) { ReconnectView(model: model) }
   }
+  private func gpaSummary(_ book: Gradebook) -> some View {
+    let entries = GPAPlanning.entries(
+      for: book.courses, gradeLevel: Int(model.profile.value?.grade ?? "") ?? 9)
+    let summary = GPAPlanning.summary(entries)
+    let layout =
+      dynamicTypeSize.isAccessibilitySize
+      ? AnyLayout(VStackLayout(alignment: .leading, spacing: 20))
+      : AnyLayout(HStackLayout(alignment: .top, spacing: 24))
+    return VStack(alignment: .leading, spacing: 16) {
+      layout {
+        gpaMetric(
+          "Unweighted GPA", GPAPlanning.displayValue(summary.unweighted),
+          identifier: "grades.unweighted", color: Theme.success)
+        gpaMetric(
+          "Weighted GPA", GPAPlanning.displayValue(summary.weighted),
+          identifier: "grades.weighted", color: Theme.foreground)
+      }
+      Text("Current-course estimate · Not a transcript GPA")
+        .font(.caption).foregroundStyle(Theme.muted)
+    }.padding(18).frame(maxWidth: .infinity, alignment: .leading)
+      .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+  }
+  private func gpaMetric(_ title: String, _ value: String, identifier: String, color: Color)
+    -> some View
+  {
+    VStack(alignment: .leading, spacing: 8) {
+      Text(title).font(.subheadline).foregroundStyle(Theme.muted)
+      Text(value).font(.largeTitle.bold().monospacedDigit()).foregroundStyle(color)
+        .accessibilityIdentifier(identifier)
+    }.frame(maxWidth: .infinity, alignment: .leading)
+  }
+
 }
 
 private struct CourseRow: View {
   let course: Course
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   var body: some View {
-    HStack(alignment: .center, spacing: 16) {
-      VStack(alignment: .leading, spacing: 8) {
-        Text(course.title).font(.headline).foregroundStyle(.primary)
-        Text(
-          [
-            course.period.isEmpty ? nil : "Period \(course.period)",
-            course.teacher.isEmpty ? nil : course.teacher,
-          ]
-          .compactMap { $0 }.joined(separator: " · ")
-        )
-        .font(.caption).foregroundStyle(.secondary)
-      }
-      Spacer(minLength: 8)
-      VStack(alignment: .trailing, spacing: 4) {
-        Text(course.officialMark.isEmpty ? "—" : course.officialMark)
-          .font(.title2.bold()).foregroundStyle(Theme.gradeColor(course.officialPercent))
-        if let percent = course.officialPercent {
-          Text("\(percent.formatted(.number.precision(.fractionLength(0...2))))%")
-            .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+    VStack(alignment: .leading, spacing: 14) {
+      if dynamicTypeSize.isAccessibilitySize {
+        HStack(alignment: .firstTextBaseline) {
+          grade
+          Spacer(minLength: 8)
+          percentage
+        }
+        details
+      } else {
+        HStack(spacing: 14) {
+          grade.frame(width: 42, alignment: .leading)
+          details.frame(maxWidth: .infinity, alignment: .leading)
+          VStack(alignment: .trailing, spacing: 8) {
+            percentage
+            Image(systemName: "chevron.right").font(.caption2.weight(.semibold))
+              .foregroundStyle(Theme.tertiary).accessibilityHidden(true)
+          }
         }
       }
-      Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
-        .accessibilityHidden(true)
+      if let percent = course.officialPercent { GradeMeter(percent: percent) }
     }.padding(18).frame(maxWidth: .infinity, alignment: .leading)
       .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-      .accessibilityElement(children: .combine)
+      .accessibilityElement(children: .combine).accessibilityLabel(spokenSummary)
+  }
+  private var grade: some View {
+    Text(course.officialMark.isEmpty ? "—" : course.officialMark)
+      .font(.title.bold()).foregroundStyle(Theme.gradeColor(course.officialPercent))
+  }
+  private var percentage: some View {
+    Group {
+      if let percent = course.officialPercent {
+        Text("\(percent.formatted(.number.precision(.fractionLength(0...2))))%")
+          .font(.subheadline.weight(.semibold).monospacedDigit())
+          .foregroundStyle(Theme.gradeColor(percent))
+      } else {
+        Text("Not graded").font(.caption).foregroundStyle(Theme.muted)
+      }
+    }.fixedSize(horizontal: false, vertical: true)
+  }
+  private var details: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Text(course.title).font(.headline).foregroundStyle(.primary)
+        .fixedSize(horizontal: false, vertical: true)
+      Text(
+        [
+          course.period.isEmpty ? nil : "Period \(course.period)",
+          course.room.isEmpty ? nil : "Room \(course.room)",
+        ].compactMap { $0 }.joined(separator: " · ")
+      )
+      .font(.caption).foregroundStyle(Theme.muted)
+      if !course.teacher.isEmpty {
+        Text(course.teacher).font(.caption).foregroundStyle(Theme.muted)
+      }
+    }
+  }
+  private var spokenSummary: String {
+    let grade = course.officialPercent.map { "\($0.formatted()) percent" } ?? "not graded"
+    return [
+      course.title, "Official grade \(course.officialMark), \(grade)",
+      course.period.isEmpty ? nil : "Period \(course.period)",
+      course.room.isEmpty ? nil : "Room \(course.room)",
+      course.teacher.isEmpty ? nil : course.teacher,
+    ].compactMap { $0 }.joined(separator: ", ")
   }
 }
 
@@ -141,11 +214,13 @@ struct ReconnectView: View {
           Text(
             "Enter your password to refresh your school records. Your district and username are already saved with your protected session."
           )
-          .foregroundStyle(.secondary)
+          .foregroundStyle(Theme.muted)
           SecureField("StudentVUE password", text: $password).textContentType(.password)
             .accessibilityIdentifier("reconnect.password")
+        }.listRowBackground(Theme.surface)
+        if let message = model.message {
+          Section { Text(message).foregroundStyle(Theme.muted) }.listRowBackground(Theme.surface)
         }
-        if let message = model.message { Section { Text(message).foregroundStyle(.secondary) } }
         Button {
           let secret = password
           password = ""
@@ -158,8 +233,9 @@ struct ReconnectView: View {
             if model.isWorking { ProgressView() }
             Text("Reconnect")
           }
-        }.disabled(password.isEmpty || model.isWorking)
-      }.navigationTitle("Reconnect").inlineTitle()
+        }.disabled(password.isEmpty || model.isWorking).listRowBackground(Theme.surface)
+      }.scrollContentBackground(.hidden).background(Theme.background).navigationTitle("Reconnect")
+        .inlineTitle()
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
     }.presentationDetents([.medium, .large]).privacyShield()
   }

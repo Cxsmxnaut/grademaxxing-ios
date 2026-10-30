@@ -25,23 +25,24 @@ struct PlannerView: View {
         }
         LabeledContent("Included credits", value: summary.attemptedCredits.formatted())
         Text("\(GPAPlanning.policyLabel) · Local estimate, not a transcript GPA.")
-          .font(.footnote).foregroundStyle(.secondary)
-      }
+          .font(.footnote).foregroundStyle(Theme.muted)
+      }.listRowBackground(Theme.surface)
       Section {
         Text(
           "Adjust course grades, credits, and rigor to explore a plan. Plus/minus grades use flat bands. AP/IB adds 1 point; Honors adds 0.5. D and failing grades receive no rigor bonus. Confirm your district's rules with a counselor."
         )
-        .font(.footnote).foregroundStyle(.secondary)
+        .font(.footnote).foregroundStyle(Theme.muted)
         Text(
           "Grades before grade 9 and nonnumeric pass grades are excluded. Academic GPA excludes PE, driver's education, and ROTC by default. Grade level starts at 9 until you adjust it or reset from a loaded profile."
-        ).font(.footnote).foregroundStyle(.secondary)
+        ).font(.footnote).foregroundStyle(Theme.muted)
         Text(
           "Edits stay in memory. Explicit refreshes and reporting-period changes reset this planner. Automatic refreshes preserve your edits."
         )
-        .font(.footnote).foregroundStyle(.secondary)
-      }
+        .font(.footnote).foregroundStyle(Theme.muted)
+      }.listRowBackground(Theme.surface)
       if model.planner.isEmpty {
-        Section { Text("Load your grades to begin planning.").foregroundStyle(.secondary) }
+        Section { Text("Load your grades to begin planning.").foregroundStyle(Theme.muted) }
+          .listRowBackground(Theme.surface)
       }
       ForEach($model.planner) { $entry in
         Section(entry.title) {
@@ -64,18 +65,20 @@ struct PlannerView: View {
           }
           if GPAPlanning.points(for: entry.letter) == nil {
             Text("This grade is excluded from the estimate because it has no numeric GPA value.")
-              .font(.caption).foregroundStyle(.secondary)
+              .font(.caption).foregroundStyle(Theme.muted)
           }
           if entry.gradeLevel < 9 {
             Text("Excluded by the provisional grade-level rule.").font(.caption).foregroundStyle(
               .secondary)
           }
-        }
+        }.listRowBackground(Theme.surface)
       }
       Section {
         Button("Reset from official grades") { model.resetPlanner() }.accessibilityIdentifier(
           "planner.reset")
-      }
-    }.scrollContentBackground(.hidden).background(Theme.background).navigationTitle("GPA planner")
+      }.listRowBackground(Theme.surface)
+    }.scrollContentBackground(.hidden).background(Theme.background).navigationTitle(
+      "GPA calculator"
+    ).inlineTitle().navigationChromeVisible()
   }
 }

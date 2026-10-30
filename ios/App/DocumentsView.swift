@@ -3,6 +3,7 @@ import SwiftUI
 
 struct DocumentsView: View {
   @Bindable var model: AppModel
+  var isAppRoot = false
   @State private var query = ""
   var body: some View {
     RecordScreen(
@@ -19,7 +20,9 @@ struct DocumentsView: View {
             "No documents", systemImage: "doc",
             description: Text(
               query.isEmpty
-                ? "StudentVUE has no documents available." : "No documents match your search."))
+                ? "StudentVUE has no documents available." : "No documents match your search.")
+          )
+          .listRowBackground(Theme.surface)
         }
         ForEach(visible) { document in
           Button {
@@ -32,17 +35,17 @@ struct DocumentsView: View {
                   .foregroundStyle(.primary)
                 Text(
                   [document.category, document.date].filter { !$0.isEmpty }.joined(separator: " · ")
-                ).font(.caption).foregroundStyle(.secondary)
+                ).font(.caption).foregroundStyle(Theme.muted)
               }
               Spacer()
-              Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+              Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.tertiary)
                 .accessibilityHidden(true)
             }.padding(.vertical, 6)
           }.buttonStyle(.plain).disabled(model.preview.isLoading || model.needsReconnect)
             .accessibilityIdentifier("document.\(document.id)")
-        }
-      }.scrollContentBackground(.hidden)
-    }.navigationTitle("Documents").inlineTitle()
+        }.listRowBackground(Theme.surface)
+      }.scrollContentBackground(.hidden).background(Theme.background)
+    }.navigationTitle("Documents").appRootChrome(isAppRoot)
       .alwaysVisibleSearch(text: $query, prompt: "Search documents")
       .task(id: model.schoolSessionKey) { await model.loadDocuments() }
   }

@@ -44,7 +44,7 @@ struct AssignmentPlannerView: View {
             Text(
               "An estimate is unavailable. Check the entered points; some courses do not provide enough grading information."
             )
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Theme.muted)
           }
           if let official = simulation.course.officialPercent {
             LabeledContent("Official percentage", value: "\(official.formatted())%")
@@ -52,8 +52,8 @@ struct AssignmentPlannerView: View {
           Text(
             "All edits stay in this planner and are discarded when you close it. School records remain unchanged."
           )
-          .font(.footnote).foregroundStyle(.secondary)
-        }
+          .font(.footnote).foregroundStyle(Theme.muted)
+        }.listRowBackground(Theme.surface)
         Section("Assignments") {
           ForEach($simulation.rows) { $row in
             NavigationLink {
@@ -70,7 +70,7 @@ struct AssignmentPlannerView: View {
                     ? "Excluded from this estimate"
                     : "\(row.category) · \(row.earned?.formatted() ?? "—") / \(row.extraCredit ? "bonus" : row.possible?.formatted() ?? "—")"
                 )
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(Theme.muted)
               }
             }.accessibilityIdentifier("simulation.assignment.\(row.id)")
               .deleteDisabled(!row.hypothetical)
@@ -83,10 +83,10 @@ struct AssignmentPlannerView: View {
           Button("Add hypothetical assignment", systemImage: "plus") {
             simulation.add(category: category, earned: 0, possible: 10)
           }.disabled(categories.isEmpty).accessibilityIdentifier("simulation.add")
-        }
+        }.listRowBackground(Theme.surface)
         Section("Target a new assignment") {
           Text("Calculate points needed on a new assignment after your edits.").font(.footnote)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Theme.muted)
           Picker("Category", selection: $category) {
             ForEach(categories, id: \.self) { Text($0).tag($0) }
           }
@@ -109,24 +109,26 @@ struct AssignmentPlannerView: View {
             } else if needed <= 0 {
               Text("The target is already met with zero points on this new assignment.").font(
                 .footnote
-              ).foregroundStyle(.secondary)
+              ).foregroundStyle(Theme.muted)
             }
           } else {
-            Text("Target estimate unavailable.").foregroundStyle(.secondary)
+            Text("Target estimate unavailable.").foregroundStyle(Theme.muted)
           }
-        }
+        }.listRowBackground(Theme.surface)
         Section {
           Button("Reset assignment edits", role: .destructive) { simulation.reset() }
             .accessibilityIdentifier("simulation.reset")
           Text(
             "Estimates follow the available weighted points and category totals. Teacher overrides, rounding, and grading changes may produce a different result."
           )
-          .font(.footnote).foregroundStyle(.secondary)
-        }
-      }.navigationTitle("Assignment planner").inlineTitle()
+          .font(.footnote).foregroundStyle(Theme.muted)
+        }.listRowBackground(Theme.surface)
+      }.scrollContentBackground(.hidden).background(Theme.background).navigationTitle(
+        "Assignment planner"
+      ).inlineTitle()
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         .privacySensitive().privacyShield()
-    }
+    }.keyboardDoneButton()
   }
 }
 
@@ -139,9 +141,9 @@ private struct SimulationRowView: View {
     Form {
       Section {
         Text(row.title).font(.headline)
-        Text(row.category).foregroundStyle(.secondary)
+        Text(row.category).foregroundStyle(Theme.muted)
         if let issue { Text(issue).font(.footnote).foregroundStyle(Theme.warning) }
-      }
+      }.listRowBackground(Theme.surface)
       Section("Local points") {
         TextField("Points earned", text: $earned).decimalInput().accessibilityLabel("Points earned")
           .accessibilityIdentifier("simulation.earned")
@@ -154,10 +156,12 @@ private struct SimulationRowView: View {
         }
         Toggle("Extra credit", isOn: $row.extraCredit)
         Text("Blank or invalid points leave the estimate unavailable.").font(.footnote)
-          .foregroundStyle(.secondary)
-      }.disabled(issue != nil)
-      Section { Toggle("Exclude from estimate", isOn: $row.excluded) }
-    }.navigationTitle("Edit estimate").inlineTitle()
+          .foregroundStyle(Theme.muted)
+      }.listRowBackground(Theme.surface).disabled(issue != nil)
+      Section { Toggle("Exclude from estimate", isOn: $row.excluded) }.listRowBackground(
+        Theme.surface)
+    }.scrollContentBackground(.hidden).background(Theme.background).navigationTitle("Edit estimate")
+      .inlineTitle()
       .onAppear {
         earned = row.earned.map { String($0) } ?? ""
         possible = row.possible.map { String($0) } ?? ""

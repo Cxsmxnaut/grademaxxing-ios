@@ -27,11 +27,19 @@ public struct SavedSession: Codable, Equatable, Sendable {
   public let identity: SessionIdentity
   public let cookie: String
   public let expires: Date
-  public init(origin: String, identity: SessionIdentity, cookie: String, expires: Date) {
+  /// The name the backend issued the session cookie under. The backend prefixes it with `__Host-`
+  /// outside development, and an authenticated request must echo back the name it was given.
+  /// A session saved before this field existed falls back to the unprefixed name.
+  public let cookieName: String?
+  public init(
+    origin: String, identity: SessionIdentity, cookie: String, expires: Date,
+    cookieName: String? = nil
+  ) {
     self.origin = origin
     self.identity = identity
     self.cookie = cookie
     self.expires = expires
+    self.cookieName = cookieName
   }
 }
 
@@ -151,6 +159,20 @@ public actor APIClient {
     self.vault = vault
   }
 
+  /// The portal service accepts a bare host, and the session it issues reports one, so a domain
+  /// without a scheme is completed as https instead of being refused. Everything else still fails
+  /// closed: only an https portal URL with a host and without embedded credentials is accepted, and
+  /// the length bound applies to the domain as typed.
+  static func portalURL(from domain: String) -> URL? {
+    let trimmed = domain.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty, trimmed.count <= 253 else { return nil }
+    let candidate = trimmed.contains("://") ? trimmed : "https://" + trimmed
+    guard let url = URL(string: candidate), url.scheme?.lowercased() == "https", url.host != nil,
+      url.user == nil, url.password == nil
+    else { return nil }
+    return url
+  }
+
   public func login(domain: String, username: String, password: String) async throws
     -> SessionIdentity
   {
@@ -160,10 +182,8 @@ public actor APIClient {
     let version = sessionGeneration
     let domain = domain.trimmingCharacters(in: .whitespacesAndNewlines)
     let username = username.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard let portal = URL(string: domain), portal.scheme?.lowercased() == "https",
-      portal.host != nil,
-      portal.user == nil, portal.password == nil, !username.isEmpty, username.count <= 254,
-      !password.isEmpty, password.count <= 1_024, domain.count <= 253
+    guard Self.portalURL(from: domain) != nil, !username.isEmpty, username.count <= 254,
+      !password.isEmpty, password.count <= 1_024
     else { throw APIError.invalidInput }
     struct Credentials: Encodable {
       let domain: String
@@ -180,7 +200,8 @@ public actor APIClient {
     else { throw APIError.invalidResponse }
     let saved = SavedSession(
       origin: configuration.origin.absoluteString, identity: identity, cookie: cookie.value,
-      expires: cookie.expiresDate ?? Date().addingTimeInterval(12 * 3_600))
+      expires: cookie.expiresDate ?? Date().addingTimeInterval(12 * 3_600),
+      cookieName: cookie.name)
     try await persist(saved, version: version)
     return identity
   }
@@ -348,7 +369,8 @@ public actor APIClient {
     request.setValue("no-store", forHTTPHeaderField: "Cache-Control")
     if body != nil { request.setValue("application/json", forHTTPHeaderField: "Content-Type") }
     if let saved = sessionOverride ?? stored {
-      request.setValue("grademaxxing_session=\(saved.cookie)", forHTTPHeaderField: "Cookie")
+      let name = saved.cookieName ?? Self.developmentSessionCookieName
+      request.setValue("\(name)=\(saved.cookie)", forHTTPHeaderField: "Cookie")
       request.setValue(saved.identity.sessionId, forHTTPHeaderField: "x-grademaxxing-session")
     }
     let result: HTTPResult
@@ -377,18 +399,26 @@ public actor APIClient {
     {
       let updated = SavedSession(
         origin: saved.origin, identity: saved.identity, cookie: cookie.value,
-        expires: cookie.expiresDate ?? saved.expires)
+        expires: cookie.expiresDate ?? saved.expires, cookieName: cookie.name)
       try await persist(updated, version: version)
     }
     return result
   }
 
+  /// The backend names its session cookie `grademaxxing_session`, and prefixes it with `__Host-`
+  /// whenever it is not running in development mode — which is what the deployed pre-production and
+  /// production origins do. Both names have to be accepted, and the one received has to be echoed
+  /// back, or a successful sign-in is discarded as an unreadable response.
+  static let developmentSessionCookieName = "grademaxxing_session"
+  static let productionSessionCookieName = "__Host-" + developmentSessionCookieName
+  static let sessionCookieNames = [developmentSessionCookieName, productionSessionCookieName]
   private func sessionCookie(in result: HTTPResult) -> HTTPCookie? {
     guard let header = result.headers["set-cookie"] else { return nil }
+    // URLSession joins repeated `Set-Cookie` fields with a comma; Foundation parses each cookie.
     return HTTPCookie.cookies(
       withResponseHeaderFields: ["Set-Cookie": header], for: configuration.origin
     ).first {
-      $0.name == "grademaxxing_session" && $0.path == "/" && !$0.value.isEmpty
+      Self.sessionCookieNames.contains($0.name) && $0.path == "/" && !$0.value.isEmpty
         && $0.domain.trimmingCharacters(in: CharacterSet(charactersIn: ".")).lowercased()
           == configuration.origin.host?.lowercased()
         && $0.isSecure && ($0.expiresDate ?? .distantFuture) > Date()

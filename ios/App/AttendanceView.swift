@@ -3,6 +3,7 @@ import SwiftUI
 
 struct AttendanceView: View {
   @Bindable var model: AppModel
+  var isAppRoot = false
   @State private var filter = "All"
   var body: some View {
     RecordScreen(
@@ -19,11 +20,11 @@ struct AttendanceView: View {
             }
           }.pickerStyle(.menu).accessibilityIdentifier("attendance.filter")
           Text("Only days reported by StudentVUE appear here. An unlisted day is not an absence.")
-            .font(.footnote).foregroundStyle(.secondary)
-        }
+            .font(.footnote).foregroundStyle(Theme.muted)
+        }.listRowBackground(Theme.surface)
         Section("Recorded days") {
           let records = book.records.filter { filter == "All" || $0.status.rawValue == filter }
-          if records.isEmpty { Text("No records match this filter.").foregroundStyle(.secondary) }
+          if records.isEmpty { Text("No records match this filter.").foregroundStyle(Theme.muted) }
           ForEach(records) { record in
             NavigationLink {
               AttendanceDetailView(record: record)
@@ -36,7 +37,7 @@ struct AttendanceView: View {
                     .headline)
                   Text(record.reason.isEmpty ? record.status.rawValue : record.reason).font(
                     .caption
-                  ).foregroundStyle(.secondary)
+                  ).foregroundStyle(Theme.muted)
                 }
                 Spacer()
                 Text(record.status.rawValue).font(.caption.weight(.semibold)).foregroundStyle(
@@ -44,7 +45,7 @@ struct AttendanceView: View {
               }.padding(.vertical, 4)
             }.accessibilityIdentifier("attendance.record.\(record.date.iso)")
           }
-        }
+        }.listRowBackground(Theme.surface)
         if !book.courseTotals.isEmpty {
           Section("Official course totals") {
             ForEach(Array(book.courseTotals.enumerated()), id: \.offset) { _, total in
@@ -56,10 +57,10 @@ struct AttendanceView: View {
                 totalRow("Unexcused", total.unexcused)
               }
             }
-          }
+          }.listRowBackground(Theme.surface)
         }
-      }.scrollContentBackground(.hidden)
-    }.navigationTitle("Attendance").inlineTitle()
+      }.scrollContentBackground(.hidden).background(Theme.background)
+    }.navigationTitle("Attendance").appRootChrome(isAppRoot)
       .task(id: model.schoolSessionKey) { await model.loadAttendance() }
   }
   private func totalRow(_ label: String, _ count: Int?) -> some View {
@@ -76,7 +77,7 @@ private struct AttendanceDetailView: View {
         Label(record.status.rawValue, systemImage: record.status.symbol).foregroundStyle(
           record.status.tone)
         if !record.reason.isEmpty { Text(record.reason) }
-      }
+      }.listRowBackground(Theme.surface)
       Section("Period records") {
         if record.periods.isEmpty {
           Text("StudentVUE provided a daily record without period details.").foregroundStyle(
@@ -90,12 +91,14 @@ private struct AttendanceDetailView: View {
             ).font(.headline)
             if !period.status.isEmpty { Text(period.status) }
             if !period.reason.isEmpty {
-              Text(period.reason).font(.subheadline).foregroundStyle(.secondary)
+              Text(period.reason).font(.subheadline).foregroundStyle(Theme.muted)
             }
           }.padding(.vertical, 4)
         }
-      }
-    }.navigationTitle("Attendance record").inlineTitle()
+      }.listRowBackground(Theme.surface)
+    }.scrollContentBackground(.hidden).background(Theme.background).navigationTitle(
+      "Attendance record"
+    ).inlineTitle()
   }
 }
 

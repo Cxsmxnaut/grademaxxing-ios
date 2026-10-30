@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MailView: View {
   @Bindable var model: AppModel
+  var isAppRoot = false
   @State private var query = ""
   @State private var folder = "all"
   @State private var unreadOnly = false
@@ -19,8 +20,8 @@ struct MailView: View {
           }.pickerStyle(.menu).accessibilityIdentifier("mail.folder")
           Toggle("Unread in StudentVUE", isOn: $unreadOnly)
           Text("Reading here does not mark a message as read in StudentVUE.").font(.footnote)
-            .foregroundStyle(.secondary)
-        }
+            .foregroundStyle(Theme.muted)
+        }.listRowBackground(Theme.surface)
         let messages = mailbox.messages.filter { item in
           (folder == "all" || item.folderKey == folder) && (!unreadOnly || !item.isRead)
             && (query.isEmpty || item.subject.localizedCaseInsensitiveContains(query)
@@ -28,7 +29,7 @@ struct MailView: View {
         }
         Section("Messages") {
           if messages.isEmpty {
-            Text("No messages match this selection.").foregroundStyle(.secondary)
+            Text("No messages match this selection.").foregroundStyle(Theme.muted)
           }
           ForEach(messages) { message in
             NavigationLink {
@@ -41,9 +42,9 @@ struct MailView: View {
                   Text(message.subject.isEmpty ? "No subject" : message.subject).font(.headline)
                   Text(
                     [message.sender, message.date].filter { !$0.isEmpty }.joined(separator: " · ")
-                  ).font(.caption).foregroundStyle(.secondary)
+                  ).font(.caption).foregroundStyle(Theme.muted)
                   if !message.folderName.isEmpty {
-                    Text(message.folderName).font(.caption2).foregroundStyle(.tertiary)
+                    Text(message.folderName).font(.caption2).foregroundStyle(Theme.tertiary)
                   }
                   if message.messageID == nil {
                     Text("Message details are unavailable.").font(.caption).foregroundStyle(
@@ -56,16 +57,16 @@ struct MailView: View {
             )
             .accessibilityValue(message.isRead ? "Read in StudentVUE" : "Unread in StudentVUE")
           }
-        }
+        }.listRowBackground(Theme.surface)
         if mailbox.messages.filter({ folder == "all" || $0.folderKey == folder }).count >= 500 {
           Section {
             Text("More messages may be available in StudentVUE.").font(.footnote).foregroundStyle(
               .secondary)
-          }
+          }.listRowBackground(Theme.surface)
         }
-      }.scrollContentBackground(.hidden)
+      }.scrollContentBackground(.hidden).background(Theme.background)
     }
-    .navigationTitle("Mail").inlineTitle()
+    .navigationTitle("Mail").appRootChrome(isAppRoot)
     .alwaysVisibleSearch(text: $query, prompt: "Search messages")
     .task(id: model.schoolSessionKey) { await model.loadMailbox() }
   }
@@ -91,7 +92,7 @@ struct MessageReadView: View {
               ).font(.title2.bold())
               Text(message.sender.isEmpty ? preview.sender : message.sender).font(.headline)
               Text(message.date.isEmpty ? preview.date : message.date).font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.muted)
             }
             Text(message.body.text.isEmpty ? "No message text was provided." : message.body.text)
               .frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)

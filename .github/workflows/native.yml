@@ -11,43 +11,106 @@ permissions:
 
 jobs:
   native:
-    runs-on: macos-15
-    timeout-minutes: 35
+    runs-on: macos-26
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: small
+            device: small
+            content_size: large
+          - label: large
+            device: large
+            content_size: large
+          - label: large-accessibility
+            device: large
+            content_size: accessibility-extra-extra-extra-large
     steps:
       - uses: actions/checkout@v4
+      - name: Verify submission-capable Xcode
+        run: |
+          xcodebuild -version
+          python3 - <<'PYCODE'
+          import re, subprocess
+          version = subprocess.check_output(['xcodebuild', '-version'], text=True)
+          if int(re.search(r'^Xcode (\d+)', version)[1]) < 26:
+              raise SystemExit('App Store validation requires Xcode 26 or later.')
+          PYCODE
       - name: Synthetic core checks
         working-directory: ios
         run: swift run GrademaxxingChecks
-      - name: Native project and formatting
+      - name: Release source and formatting checks
         working-directory: ios
         run: |
-          python3 scripts/generate-project.py --check
-          xcrun swift-format lint --strict --recursive App Sources Tests UITests Package.swift
+          python3 scripts/release-preflight.py
+          xcrun swift-format lint --strict --recursive App Sources Tests UITests Package.swift scripts/build-app-icon.swift
       - name: Select available iPhone simulator
+        env:
+          DEVICE_SIZE: ${{ matrix.device }}
         run: |
           xcrun simctl list devices available --json > "$RUNNER_TEMP/simulators.json"
-          python3 - <<'PY'
+          python3 - <<'PYCODE'
           import json, os
           from pathlib import Path
           devices = json.loads((Path(os.environ['RUNNER_TEMP']) / 'simulators.json').read_text())['devices']
           iphones = [device for runtime, entries in devices.items() if '.iOS-' in runtime for device in entries if device.get('isAvailable') and device['name'].startswith('iPhone')]
-          if not iphones:
-              raise SystemExit('No available iPhone simulator runtime.')
+          large = os.environ['DEVICE_SIZE'] == 'large'
+          matches = [device for device in iphones if any(word in device['name'] for word in ('Max', 'Plus')) == large]
+          if not matches:
+              raise SystemExit('No available ' + os.environ['DEVICE_SIZE'] + ' iPhone simulator.')
+          device = sorted(matches, key=lambda item: ('Max' not in item['name'] if large else False, item['name']))[0]
           with open(os.environ['GITHUB_ENV'], 'a') as environment:
-              environment.write('IOS_SIMULATOR_UDID=' + iphones[0]['udid'] + '\n')
-          print('Selected ' + iphones[0]['name'])
-          PY
+              environment.write('IOS_SIMULATOR_UDID=' + device['udid'] + '\n')
+          print('Selected ' + device['name'])
+          PYCODE
+      - name: Boot simulator and set text size without opening Simulator
+        run: |
+          xcrun simctl boot "$IOS_SIMULATOR_UDID"
+          xcrun simctl bootstatus "$IOS_SIMULATOR_UDID" -b
+          xcrun simctl ui "$IOS_SIMULATOR_UDID" content_size '${{ matrix.content_size }}'
       - name: Build and test synthetic iPhone demo
         run: |
           xcodebuild test -project ios/Grademaxxing.xcodeproj -scheme Grademaxxing \
             -configuration Debug -destination "platform=iOS Simulator,id=$IOS_SIMULATOR_UDID" \
-            -derivedDataPath "$RUNNER_TEMP/NativeDerivedData" \
-            CODE_SIGNING_ALLOWED=NO
+            -parallel-testing-enabled NO \
+            -only-testing:GrademaxxingUITests/GrademaxxingUITests \
+            -resultBundlePath "$RUNNER_TEMP/NativeTests.xcresult" \
+            -derivedDataPath "$RUNNER_TEMP/NativeDerivedData" CODE_SIGNING_ALLOWED=NO
+      - name: Export headless test summaries and synthetic screenshots
+        if: always()
+        run: |
+          if [[ -d "$RUNNER_TEMP/NativeTests.xcresult" ]]; then
+            xcrun xcresulttool get test-results summary --path "$RUNNER_TEMP/NativeTests.xcresult" > "$RUNNER_TEMP/NativeTestSummary.json"
+            xcrun xcresulttool get test-results tests --path "$RUNNER_TEMP/NativeTests.xcresult" > "$RUNNER_TEMP/NativeTestCases.json"
+            xcrun xcresulttool export attachments --path "$RUNNER_TEMP/NativeTests.xcresult" --output-path "$RUNNER_TEMP/NativeTestAttachments"
+          fi
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: native-test-results
-          path: ${{ runner.temp }}/NativeDerivedData/Logs/Test/*.xcresult
+          name: native-test-results-${{ matrix.label }}
+          path: |
+            ${{ runner.temp }}/NativeTests.xcresult
+            ${{ runner.temp }}/NativeTestSummary.json
+            ${{ runner.temp }}/NativeTestCases.json
+            ${{ runner.temp }}/NativeTestAttachments
           if-no-files-found: ignore
+          retention-days: 7
+
+  archive:
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and inspect unsigned Release device archive
+        working-directory: ios
+        run: bash scripts/archive.sh --unsigned
+      - name: Package engineering archive
+        run: ditto -c -k --keepParent ios/.build/release/Grademaxxing.xcarchive "$RUNNER_TEMP/Grademaxxing-unsigned.zip"
+      - name: Upload engineering archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-unsigned-release-archive
+          path: ${{ runner.temp }}/Grademaxxing-unsigned.zip
           retention-days: 7

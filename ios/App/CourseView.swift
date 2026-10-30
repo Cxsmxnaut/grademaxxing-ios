@@ -6,10 +6,12 @@ struct CourseView: View {
   let course: Course
   let detailed: Bool
   let isDemo: Bool
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @State private var query = ""
   @State private var filter = "All"
   @State private var showWhatIf = false
   @State private var showAssignmentPlanner = false
+  @State private var showCategories = false
   private var assignments: [Assignment] {
     course.assignments.filter { item in
       let matches =
@@ -26,16 +28,27 @@ struct CourseView: View {
           Text(isDemo ? "DEMO OFFICIAL MARK" : "OFFICIAL STUDENTVUE MARK").font(
             .caption.weight(.semibold)
           ).foregroundStyle(.secondary)
-          HStack(alignment: .firstTextBaseline, spacing: 12) {
+          let gradeLayout =
+            dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 12))
+          gradeLayout {
             Text(course.officialMark.isEmpty ? "—" : course.officialMark).font(.largeTitle.bold())
             if let percent = course.officialPercent {
               Text("\(percent.formatted(.number.precision(.fractionLength(0...2))))%")
                 .font(.title.monospacedDigit())
+                .accessibilityLabel("Official grade: \(percent.formatted()) percent")
                 .accessibilityIdentifier("course.officialPercent")
             }
           }.foregroundStyle(Theme.gradeColor(course.officialPercent))
-          Text([course.teacher, course.room].filter { !$0.isEmpty }.joined(separator: " · "))
-            .font(.subheadline).foregroundStyle(.secondary)
+          Text(
+            [
+              course.teacher.isEmpty ? nil : course.teacher,
+              course.period.isEmpty ? nil : "Period \(course.period)",
+              course.room.isEmpty ? nil : "Room \(course.room)",
+            ].compactMap { $0 }.joined(separator: " · ")
+          )
+          .font(.subheadline).foregroundStyle(.secondary)
         }.padding(.vertical, 8)
       }.listRowBackground(Theme.surface)
       if !detailed {
@@ -43,36 +56,25 @@ struct CourseView: View {
           Text(
             "This response includes marks only. Refresh the gradebook to load assignment details."
           ).foregroundStyle(.secondary)
-        }
+        }.listRowBackground(Theme.surface)
       }
-      if !course.categories.isEmpty {
-        Section("Categories") {
-          ForEach(Array(course.categories.enumerated()), id: \.offset) { _, category in
-            LabeledContent(category.name) {
-              VStack(alignment: .trailing, spacing: 4) {
-                if let weight = category.weight { Text("\(weight.formatted())% weight") }
-                if let earned = category.earned, let possible = category.possible {
-                  Text("\(earned.formatted()) / \(possible.formatted()) points").font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-              }
-            }
-          }.listRowBackground(Theme.surface)
+      Section {
+        if !course.categories.isEmpty {
           Button {
             showWhatIf = true
           } label: {
-            Label("Explore a what-if", systemImage: "slider.horizontal.3")
-          }
-          .disabled(!detailed).accessibilityIdentifier("course.whatif")
-          .listRowBackground(Theme.surface)
+            Text("What-if estimate").font(.body).fixedSize(horizontal: false, vertical: true)
+              .padding(.vertical, 4).frame(minHeight: 44)
+          }.disabled(!detailed).accessibilityIdentifier("course.whatif")
         }
-      }
+        Button {
+          showAssignmentPlanner = true
+        } label: {
+          Text("Edit assignment estimates").font(.body).fixedSize(horizontal: false, vertical: true)
+            .padding(.vertical, 4).frame(minHeight: 44)
+        }.disabled(!detailed).accessibilityIdentifier("course.assignmentPlanner")
+      }.listRowBackground(Theme.surface)
       if detailed {
-        Section {
-          Button("Plan assignment scores", systemImage: "pencil.and.list.clipboard") {
-            showAssignmentPlanner = true
-          }.accessibilityIdentifier("course.assignmentPlanner")
-        }.listRowBackground(Theme.surface)
         let trend = GradeSimulation(course: course).trend
         if !trend.isEmpty {
           Section("Estimated assignment trend") {
@@ -81,14 +83,27 @@ struct CourseView: View {
                 x: .value("Date", point.date.localDate), y: .value("Percentage", point.percentage)
               )
               .foregroundStyle(Theme.accent)
-              PointMark(
-                x: .value("Date", point.date.localDate), y: .value("Percentage", point.percentage)
-              )
-              .foregroundStyle(Theme.accent)
+              .symbol(.circle)
               .accessibilityLabel(point.assignments.joined(separator: ", "))
               .accessibilityValue("\(point.date.iso), \(point.percentage.formatted()) percent")
             }.chartYScale(domain: GradeSimulation.chartDomain(trend.map(\.percentage)))
-              .frame(height: 180).accessibilityIdentifier("course.trend")
+              .chartXScale(
+                range: .plotDimension(padding: dynamicTypeSize.isAccessibilitySize ? 36 : 20)
+              )
+              .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 3)) { _ in
+                  AxisValueLabel(format: .dateTime.month(.defaultDigits).day())
+                    .font(.caption2).foregroundStyle(Theme.muted)
+                }
+              }
+              .chartYAxis {
+                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
+                  AxisGridLine()
+                  AxisValueLabel().font(.caption2).foregroundStyle(Theme.muted)
+                }
+              }
+              .frame(height: dynamicTypeSize.isAccessibilitySize ? 280 : 180)
+              .accessibilityIdentifier("course.trend")
             Text(
               "Calculated from available assignment dates and anchored to the latest official mark. This is an estimate of past grades."
             )
@@ -96,12 +111,31 @@ struct CourseView: View {
           }.listRowBackground(Theme.surface)
         }
       }
+      if !course.categories.isEmpty {
+        Section {
+          DisclosureGroup(isExpanded: $showCategories) {
+            ForEach(Array(course.categories.enumerated()), id: \.offset) { _, category in
+              LabeledContent(category.name) {
+                VStack(alignment: .trailing, spacing: 4) {
+                  if let weight = category.weight { Text("\(weight.formatted())% weight") }
+                  if let earned = category.earned, let possible = category.possible {
+                    Text("\(earned.formatted()) / \(possible.formatted()) points")
+                      .font(.caption).foregroundStyle(Theme.muted)
+                  }
+                }
+              }
+            }
+          } label: {
+            Text("Grade categories").frame(minHeight: 44)
+          }.accessibilityIdentifier("course.categories")
+        }.listRowBackground(Theme.surface)
+      }
       Section {
-        Picker("Assignment filter", selection: $filter) {
-          Text("All").tag("All")
-          Text("Graded").tag("Graded")
-          Text("Ungraded").tag("Ungraded")
-        }.pickerStyle(.segmented).listRowBackground(Theme.surface)
+        if dynamicTypeSize.isAccessibilitySize {
+          assignmentFilter.pickerStyle(.menu)
+        } else {
+          assignmentFilter.pickerStyle(.segmented)
+        }
         if assignments.isEmpty {
           Text(query.isEmpty ? "No assignments to show." : "No matching assignments.")
             .foregroundStyle(.secondary)
@@ -129,12 +163,19 @@ struct CourseView: View {
         }
       } header: {
         Text("Assignments · \(assignments.count)")
-      }
+      }.listRowBackground(Theme.surface)
     }.scrollContentBackground(.hidden).background(Theme.background)
-      .navigationTitle(course.title).inlineTitle()
+      .navigationTitle(course.title).inlineTitle().navigationChromeVisible()
       .alwaysVisibleSearch(text: $query, prompt: "Search assignments")
       .sheet(isPresented: $showWhatIf) { WhatIfView(course: course) }
       .sheet(isPresented: $showAssignmentPlanner) { AssignmentPlannerView(course: course) }
+  }
+  private var assignmentFilter: some View {
+    Picker("Assignment filter", selection: $filter) {
+      Text("All").tag("All")
+      Text("Graded").tag("Graded")
+      Text("Ungraded").tag("Ungraded")
+    }.listRowBackground(Theme.surface)
   }
 }
 
@@ -146,7 +187,7 @@ private struct AssignmentView: View {
         Text(assignment.title).font(.headline)
         LabeledContent("Category", value: assignment.category)
         if !assignment.dueDate.isEmpty { LabeledContent("Due", value: assignment.dueDate) }
-      }
+      }.listRowBackground(Theme.surface)
       Section("Official score") {
         Text(assignment.displayScore.isEmpty ? "No score published" : assignment.displayScore).font(
           .title2.bold())
@@ -160,12 +201,17 @@ private struct AssignmentView: View {
         if assignment.calculationUnavailable {
           Text(
             "StudentVUE has not provided enough information to calculate this assignment's weighted scale."
-          ).font(.footnote).foregroundStyle(.secondary)
+          ).font(.footnote).foregroundStyle(Theme.muted)
         }
+      }.listRowBackground(Theme.surface)
+      if !assignment.notes.isEmpty {
+        Section("Teacher notes") { Text(assignment.notes) }.listRowBackground(Theme.surface)
       }
-      if !assignment.notes.isEmpty { Section("Teacher notes") { Text(assignment.notes) } }
-      if !assignment.description.isEmpty { Section("Description") { Text(assignment.description) } }
-    }.navigationTitle("Assignment").inlineTitle().privacySensitive()
+      if !assignment.description.isEmpty {
+        Section("Description") { Text(assignment.description) }.listRowBackground(Theme.surface)
+      }
+    }.scrollContentBackground(.hidden).background(Theme.background).navigationTitle("Assignment")
+      .inlineTitle().navigationChromeVisible().privacySensitive()
   }
 }
 
@@ -187,7 +233,7 @@ struct WhatIfView: View {
           Text(
             "A local estimate using the current category totals. This does not change your school records."
           )
-          .font(.subheadline).foregroundStyle(.secondary)
+          .font(.subheadline).foregroundStyle(Theme.muted)
           Picker("Category", selection: $category) {
             ForEach(Array(course.categories.enumerated()), id: \.offset) { _, item in
               Text(item.name).tag(item.name)
@@ -201,7 +247,7 @@ struct WhatIfView: View {
             "Points possible"
           )
           .accessibilityIdentifier("whatif.possible")
-        }
+        }.listRowBackground(Theme.surface)
         Section("Local what-if estimate") {
           if let result = projection {
             LabeledContent("Projected percentage") {
@@ -221,19 +267,20 @@ struct WhatIfView: View {
             Text(
               "A reliable estimate is unavailable. Enter valid points, or the category totals may not match the official grade closely enough."
             )
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Theme.muted)
           }
-        }
+        }.listRowBackground(Theme.surface)
         Section {
           Text(
             "Assumes a new graded assignment and normalized category weights. Teacher rules, rounding, and grading changes can produce a different result."
           )
-          .font(.footnote).foregroundStyle(.secondary)
-        }
-      }.navigationTitle("What-if").inlineTitle()
+          .font(.footnote).foregroundStyle(Theme.muted)
+        }.listRowBackground(Theme.surface)
+      }.scrollContentBackground(.hidden).background(Theme.background).navigationTitle("What-if")
+        .inlineTitle()
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         .onAppear { if category.isEmpty { category = course.categories.first?.name ?? "" } }
         .privacyShield()
-    }
+    }.keyboardDoneButton()
   }
 }

@@ -7,3 +7,5 @@ Grademaxxing is an AGPLv3-derived modification of GradeCompass. This repository 
 Changes in this repository: SwiftUI screens and state; Swift API/session, contract, calculation, cache, and preview implementations; synthetic native checks; an Xcode project and demo UI tests; native setup and validation documentation. This repository does not contain a copy of the web application's deployment or backend.
 
 Grademaxxing is independent of Edupoint, school districts, and schools. StudentVUE is a trademark of Edupoint Educational Systems LLC.
+
+The native visual-parity pass reuses Grademaxxing’s existing logo and bundles Manrope, Outfit, and JetBrains Mono under the SIL Open Font License. Their copyright and license texts are in `ios/FontLicenses/` and the compiled asset catalog.

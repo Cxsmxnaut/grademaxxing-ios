@@ -14,6 +14,16 @@
 			isa = PBXBuildFile;
 			fileRef = E90F9D82E0B48BD8F51EBDE0;
 		};
+		CE0AD18350BC1D26EC9C578C /* AppInformation.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = "AppInformation.swift";
+			sourceTree = "<group>";
+		};
+		8F61879016862FE6A22B46AE /* AppInformation.swift in Sources */ = {
+			isa = PBXBuildFile;
+			fileRef = CE0AD18350BC1D26EC9C578C;
+		};
 		4AE4A885EF26CC9F4DA548B8 /* AppModel.swift */ = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.swift;
@@ -184,6 +194,7 @@
 			isa = PBXGroup;
 			children = (
 				E90F9D82E0B48BD8F51EBDE0,
+				CE0AD18350BC1D26EC9C578C,
 				4AE4A885EF26CC9F4DA548B8,
 				43C1A1749B007F26897EADCD,
 				5C81AF786CA720890512955F,
@@ -273,6 +284,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1259046C59AD7DDFA421C083,
+				8F61879016862FE6A22B46AE,
 				36452576C99F5289CC25AD95,
 				943F9F803472D46CCE42C3B1,
 				5BC8495A07EAE069EC753114,
@@ -344,7 +356,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "AccentColor";
 				CODE_SIGN_STYLE = "Automatic";
 				CURRENT_PROJECT_VERSION = "1";
-				MARKETING_VERSION = "0.1.0";
+				MARKETING_VERSION = "1.0.0";
+				GRADEMAXXING_API_ORIGIN = "https://dev.grademaxxing.app";
 				GENERATE_INFOPLIST_FILE = "NO";
 				INFOPLIST_FILE = "App/Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "app.grademaxxing.native";
@@ -396,7 +409,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "AccentColor";
 				CODE_SIGN_STYLE = "Automatic";
 				CURRENT_PROJECT_VERSION = "1";
-				MARKETING_VERSION = "0.1.0";
+				MARKETING_VERSION = "1.0.0";
+				GRADEMAXXING_API_ORIGIN = "https://grademaxxing.app";
 				GENERATE_INFOPLIST_FILE = "NO";
 				INFOPLIST_FILE = "App/Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "app.grademaxxing.native";

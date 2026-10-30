@@ -10,11 +10,14 @@ private func savedSession() -> SavedSession {
     origin: origin.absoluteString, identity: identity, cookie: "synthetic-cookie",
     expires: .distantFuture)
 }
-private func json(_ string: String, status: Int = 200, cookie: String? = nil) -> HTTPResult {
+private func json(
+  _ string: String, status: Int = 200, cookie: String? = nil,
+  cookieName: String = "grademaxxing_session"
+) -> HTTPResult {
   HTTPResult(
     data: Data(string.utf8), status: status,
     headers: cookie.map {
-      ["Set-Cookie": "grademaxxing_session=\($0); Path=/; Secure; HttpOnly; Max-Age=43200"]
+      ["Set-Cookie": "\(cookieName)=\($0); Path=/; Secure; HttpOnly; Max-Age=43200"]
     } ?? [:])
 }
 private func loginReply() throws -> HTTPResult {
@@ -265,6 +268,90 @@ enum APITests {
     try expect(saved.cookie == "synthetic-rotated")
     let persisted = String(decoding: try JSONEncoder().encode(saved), as: UTF8.self)
     try expect(!persisted.contains("synthetic-password"))
+  }
+  static func acceptsBarePortalHostAndStillRefusesUnsafeInput() async throws {
+    // The live service takes a bare district host and its own session payload reports one, so the
+    // reconnect path — which signs in again with the domain the service returned — has to complete.
+    // A client that only knew `https://host` refused the very value it had stored itself.
+    let bareHost = "synthetic-district.example"
+    let transport = ScriptedTransport([try loginReply()])
+    let vault = MemorySessionVault()
+    let api = try client(transport, vault: vault)
+    let result = try await api.login(
+      domain: bareHost, username: "synthetic-user", password: "synthetic-password")
+    try expect(result == identity)
+    try expect(try require(await vault.load()).identity == identity)
+    let requests = await transport.requests
+    try expect(requests.count == 1)
+    let body = try require(requests[0].httpBody)
+    let sent = try require(try JSONSerialization.jsonObject(with: body) as? [String: String])
+    try expect(sent["domain"] == bareHost)
+    try expect(sent["username"] == "synthetic-user")
+
+    // Everything else still fails closed, and nothing unsafe reaches the transport.
+    var unsafeDomains = [
+      "http://synthetic-district.example", "ftp://synthetic-district.example",
+      "https://user:synthetic-password@synthetic-district.example", "", "   ",
+      String(repeating: "a", count: 254),
+    ]
+    unsafeDomains.append("https://synthetic-district.example/" + String(repeating: "a", count: 250))
+    for unsafe in unsafeDomains {
+      let rejecting = ScriptedTransport([try loginReply()])
+      let rejectingAPI = try client(rejecting, vault: MemorySessionVault())
+      try await expectThrows(APIError.invalidInput) {
+        try await rejectingAPI.login(
+          domain: unsafe, username: "synthetic-user", password: "synthetic-password")
+      }
+      try expect(await rejecting.requests.isEmpty)
+    }
+    for (user, secret) in [("", "synthetic-password"), ("synthetic-user", "")] {
+      let rejecting = ScriptedTransport([try loginReply()])
+      let rejectingAPI = try client(rejecting, vault: MemorySessionVault())
+      try await expectThrows(APIError.invalidInput) {
+        try await rejectingAPI.login(domain: bareHost, username: user, password: secret)
+      }
+      try expect(await rejecting.requests.isEmpty)
+    }
+  }
+
+  static func acceptsHostPrefixedProductionSessionCookie() async throws {
+    // The deployed origins run the backend outside development mode, where it names the session
+    // cookie `__Host-grademaxxing_session` and also sets a referral cookie. URLSession delivers the
+    // repeated `Set-Cookie` fields joined by a comma. A client that only knows the development name
+    // discards a sign-in the backend accepted as an unreadable response, so no real grade can load,
+    // and it would also send the wrong cookie name on every later request.
+    let productionName = "__Host-grademaxxing_session"
+    let transport = ScriptedTransport([
+      HTTPResult(
+        data: try JSONEncoder().encode(identity), status: 200,
+        headers: [
+          "Set-Cookie":
+            "__Host-grademaxxing_referral=synthetic-referral; Path=/; Secure; HttpOnly; Max-Age=43200, \(productionName)=synthetic-production-cookie; Path=/; Secure; HttpOnly; Max-Age=43200"
+        ]),
+      json(
+        "{\"signedIn\":true}", cookie: "synthetic-rotated", cookieName: productionName),
+      HTTPResult(data: try contractFixture(), status: 200),
+    ])
+    let vault = MemorySessionVault()
+    let api = try client(transport, vault: vault)
+    let result = try await api.login(
+      domain: identity.domain, username: identity.username, password: "synthetic-password")
+    try expect(result == identity)
+    let signedIn = try require(await vault.load())
+    try expect(signedIn.cookie == "synthetic-production-cookie")
+    try expect(signedIn.cookieName == productionName)
+    try await api.keepAlive()
+    _ = try await api.gradebook(period: 2)
+    let requests = await transport.requests
+    try expect(
+      requests[1].value(forHTTPHeaderField: "Cookie")
+        == "\(productionName)=synthetic-production-cookie")
+    let rotated = try require(await vault.load())
+    try expect(rotated.cookie == "synthetic-rotated")
+    try expect(rotated.cookieName == productionName)
+    try expect(
+      requests[2].value(forHTTPHeaderField: "Cookie")
+        == "\(productionName)=synthetic-rotated")
   }
   static func restoresAndClearsInvalidSession() async throws {
     let vault = MemorySessionVault(savedSession())

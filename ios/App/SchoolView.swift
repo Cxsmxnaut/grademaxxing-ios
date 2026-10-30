@@ -7,6 +7,7 @@ struct SchoolView: View {
     List {
       if model.isDemo {
         Section { NoticeView(text: "Demo · All school records are invented.", symbol: "sparkles") }
+          .listRowBackground(Theme.surface)
       }
       Section("School records") {
         NavigationLink {
@@ -45,12 +46,13 @@ struct SchoolView: View {
           Label("Student profile", systemImage: "person.text.rectangle")
         }
         .accessibilityIdentifier("school.profile")
-      }
+      }.listRowBackground(Theme.surface)
       Section {
         Text("School records are read-only. Contact your school if a record needs to be corrected.")
-          .font(.footnote).foregroundStyle(.secondary)
-      }
+          .font(.footnote).foregroundStyle(Theme.muted)
+      }.listRowBackground(Theme.surface)
     }.scrollContentBackground(.hidden).background(Theme.background).navigationTitle("School")
+      .inlineTitle().navigationChromeVisible()
   }
 }
 
@@ -59,11 +61,11 @@ struct RecordScreen<Value: Sendable, Content: View>: View {
   let store: RecordStore<Value>
   let emptyTitle: String
   let reload: () async -> Void
+  var title: String? = nil
   @ViewBuilder let content: (Value) -> Content
   @State private var showReconnect = false
   var body: some View {
     VStack(spacing: 0) {
-      if model.isDemo { NoticeView(text: "Synthetic demo records", symbol: "sparkles").padding(12) }
       if model.needsReconnect {
         Button("Reconnect to StudentVUE") { showReconnect = true }.buttonStyle(.borderedProminent)
           .padding(12)
@@ -123,12 +125,12 @@ struct ScheduleView: View {
           if let date = SchoolDate(iso: schedule.date) {
             Text(date.localDate.formatted(date: .complete, time: .omitted)).font(.headline)
           } else {
-            Text("Schedule date not available").foregroundStyle(.secondary)
+            Text("Schedule date not available").foregroundStyle(Theme.muted)
           }
           if schedule.classes.isEmpty {
-            Text("No classes are listed for this date.").foregroundStyle(.secondary)
+            Text("No classes are listed for this date.").foregroundStyle(Theme.muted)
           }
-        }
+        }.listRowBackground(Theme.surface)
         ForEach(Array(schedule.classes.enumerated()), id: \.offset) { _, item in
           Section(item.period.isEmpty ? "Class" : "Period \(item.period)") {
             Text(item.courseTitle).font(.headline)
@@ -140,11 +142,11 @@ struct ScheduleView: View {
                 systemImage: "clock")
             }
             if !item.schoolName.isEmpty {
-              Text(item.schoolName).font(.caption).foregroundStyle(.secondary)
+              Text(item.schoolName).font(.caption).foregroundStyle(Theme.muted)
             }
-          }
+          }.listRowBackground(Theme.surface)
         }
-      }.scrollContentBackground(.hidden)
+      }.scrollContentBackground(.hidden).background(Theme.background)
     }.navigationTitle("Schedule").inlineTitle()
       .task(id: model.schoolSessionKey) { await model.loadSchedule() }
   }
@@ -162,10 +164,10 @@ struct ProfileView: View {
           Text(profile.name.isEmpty ? "Student profile" : profile.name).font(.title2.bold())
           if !profile.grade.isEmpty { LabeledContent("Grade", value: profile.grade) }
           if !profile.permId.isEmpty { LabeledContent("Student ID", value: profile.permId) }
-        }
+        }.listRowBackground(Theme.surface)
         Section("StudentVUE information") {
           if profile.fields.isEmpty {
-            Text("No additional information is available.").foregroundStyle(.secondary)
+            Text("No additional information is available.").foregroundStyle(Theme.muted)
           }
           ForEach(profile.fields.keys.sorted(), id: \.self) { field in
             LabeledContent(field) {
@@ -173,8 +175,8 @@ struct ProfileView: View {
                 .enabled)
             }
           }
-        }
-      }.scrollContentBackground(.hidden)
+        }.listRowBackground(Theme.surface)
+      }.scrollContentBackground(.hidden).background(Theme.background)
     }.navigationTitle("Student profile").inlineTitle()
       .task(id: model.schoolSessionKey) { await model.loadProfile() }
   }

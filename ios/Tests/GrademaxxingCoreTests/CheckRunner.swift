@@ -79,6 +79,12 @@ func expectThrows<T, E: Error & Equatable>(_ error: E, operation: () async throw
     try await check("login, session header, rotation, password non-persistence") {
       try await APITests.loginAndRotatedCookieUseExactBackendHeaders()
     }
+    try await check("production __Host- session cookie is accepted, kept, and echoed") {
+      try await APITests.acceptsHostPrefixedProductionSessionCookie()
+    }
+    try await check("bare portal host signs in, unsafe domains still refused") {
+      try await APITests.acceptsBarePortalHostAndStillRefusesUnsafeInput()
+    }
     try await check("invalid restored session cleanup") {
       try await APITests.restoresAndClearsInvalidSession()
     }
