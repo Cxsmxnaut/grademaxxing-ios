@@ -323,9 +323,57 @@ extension View {
     #if os(iOS)
       self.searchable(
         text: text, placement: .navigationBarDrawer(displayMode: .always),
-        prompt: Text(prompt).foregroundColor(Theme.muted))
+        prompt: prompt
+      )
+      .background {
+        ReadableSearchField().frame(width: 0, height: 0).accessibilityHidden(true)
+      }
     #else
       self.searchable(text: text, prompt: prompt)
     #endif
   }
 }
+
+#if os(iOS)
+  /// SwiftUI's searchable prompt drops Text foreground attributes on some iOS versions.
+  /// Style the public UISearchBar search field after navigation installs it, retaining its
+  /// native search behavior, font, accessible label, and attributed placeholder contents.
+  private struct ReadableSearchField: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> SearchFieldStyleController {
+      SearchFieldStyleController()
+    }
+    func updateUIViewController(_ controller: SearchFieldStyleController, context: Context) {
+      controller.updateSearchFields()
+    }
+  }
+
+  private final class SearchFieldStyleController: UIViewController {
+    override func loadView() {
+      view = UIView()
+      view.isUserInteractionEnabled = false
+    }
+    override func viewDidAppear(_ animated: Bool) {
+      super.viewDidAppear(animated)
+      updateSearchFields()
+    }
+    override func viewDidLayoutSubviews() {
+      super.viewDidLayoutSubviews()
+      updateSearchFields()
+    }
+    func updateSearchFields() {
+      guard let window = viewIfLoaded?.window else { return }
+      var pending: [UIView] = [window]
+      while let candidate = pending.popLast() {
+        pending.append(contentsOf: candidate.subviews)
+        guard let bar = candidate as? UISearchBar,
+          let current = bar.searchTextField.attributedPlaceholder, current.length > 0
+        else { continue }
+        let color = UIColor(Theme.muted).resolvedColor(with: bar.traitCollection)
+        let readable = NSMutableAttributedString(attributedString: current)
+        readable.addAttribute(
+          .foregroundColor, value: color, range: NSRange(location: 0, length: readable.length))
+        if !current.isEqual(to: readable) { bar.searchTextField.attributedPlaceholder = readable }
+      }
+    }
+  }
+#endif

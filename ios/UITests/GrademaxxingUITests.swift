@@ -43,7 +43,15 @@ final class GrademaxxingUITests: XCTestCase {
       let bottom =
         tabBar.exists && tabBar.isHittable ? tabBar.frame.minY - 8 : app.frame.maxY - 16
       if element.frame.minY >= top, element.frame.maxY <= bottom { return }
-      if element.frame.maxY > bottom { app.swipeUp() } else { app.swipeDown() }
+      let below = element.frame.maxY > bottom
+      let required = below ? element.frame.maxY - bottom : top - element.frame.minY
+      let distance = min((bottom - top) * 0.35, max(44, required + 12))
+      let origin = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
+      let center = (top + bottom) / 2 - app.frame.minY
+      let start = origin.withOffset(CGVector(dx: app.frame.width / 2, dy: center))
+      let end = origin.withOffset(
+        CGVector(dx: app.frame.width / 2, dy: center + (below ? -distance : distance)))
+      start.press(forDuration: 0.05, thenDragTo: end)
     }
   }
 
@@ -139,6 +147,11 @@ final class GrademaxxingUITests: XCTestCase {
     try audit()
     openCourse(in: app)
     XCTAssertTrue(app.staticTexts["course.officialPercent"].waitForExistence(timeout: 5))
+    // Inspect the entire plot and its axis labels, rather than auditing a chart partly
+    // clipped by the viewport. No chart or text-clipping issue is excluded.
+    let trend = app.descendants(matching: .any).matching(identifier: "course.trend").firstMatch
+    bringIntoView(trend, in: app)
+    XCTAssertTrue(trend.exists)
     try audit()
     app.navigationBars.buttons.element(boundBy: 0).tap()
     app.buttons["grades.gpa"].tap()

@@ -90,6 +90,7 @@ enum AppRoute: Hashable {
 
 private struct AppShell: View {
   @Bindable var model: AppModel
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @State private var section = AppSection.grades
   @State private var showMenu = false
   @State private var paths: [AppSection: [AppRoute]] = [:]
@@ -156,7 +157,9 @@ private struct AppShell: View {
     HStack(spacing: 7) {
       Image("BrandMark").resizable().scaledToFit().frame(width: 24, height: 24)
         .accessibilityHidden(true)
-      Text("Grademaxxing").font(.custom("OutfitThin-Bold", size: 16, relativeTo: .headline))
+      if !dynamicTypeSize.isAccessibilitySize {
+        Text("Grademaxxing").font(.custom("OutfitThin-Bold", size: 16, relativeTo: .headline))
+      }
       if model.isDemo {
         Text("Demo").font(.caption2).foregroundStyle(Theme.muted)
       }
